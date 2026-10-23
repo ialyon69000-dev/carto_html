@@ -36,12 +36,12 @@ Application cartographique **totalement autonome (100% hors-ligne)** centrée su
 
 Le fichier Markdown — également embarqué dans `index.html` via `<script id="embedded-markdown">` — contient désormais la **liste complète des commerces de la zone couverte** :
 
-- **166 marqueurs** au total, répartis dans toute la zone couverte :
+- **172 marqueurs** au total, répartis dans toute la zone couverte :
   - 🚬 **90 bureaux de tabac / presse** (catégorie `tabac`) ;
-  - 📱 **76 magasins de téléphonie** (catégorie `telephonie`).
-- **Source** : OpenStreetMap (licence ODbL), requête Overpass sur les tags `shop=tobacco` et `shop=mobile_phone`, données OSM au **03/08/2026**.
+  - 📱 **82 magasins de téléphonie** (catégorie `telephonie`), dont **6 grandes enseignes vendeuses de téléphones** ajoutées le 23/10/2026 : **Fnac Lyon Bellecour**, **Fnac Lyon Part-Dieu**, **Fnac Lyon — Gare Part-Dieu**, **Darty Lyon République**, **Darty La Part-Dieu** et **Boulanger Lyon — Les Cordeliers** (catégorisées `shop=electronics` dans OSM, elles n'apparaissaient donc pas dans l'extraction `shop=mobile_phone`). Le Boulanger de la Part-Dieu, fermé, et les magasins hors zone des 5 km (ex. Darty Caluire) n'ont pas été ajoutés.
+- **Source** : OpenStreetMap (licence ODbL), requête Overpass sur les tags `shop=tobacco` et `shop=mobile_phone`, données OSM au **03/08/2026** ; Fnac / Darty / Boulanger : adresses et coordonnées vérifiées sur les sites officiels des enseignes (oct. 2026).
 - **Adresses** : numéro + rue lorsqu'il existe dans OSM, sinon rue la plus proche calculée **hors-ligne** avec le réseau viaire embarqué, puis quartier ou commune.
-- **Pourtour = indicateur de visite** (et non de proximité) : les 166 marqueurs sont réglés sur 🔴 **rouge**, c'est-à-dire « à visiter / non visité ». Vous pouvez ensuite passer un point en 🟠 **orange** (en cours) ou 🟢 **vert** (visité) depuis sa fiche.
-- **Identifiants** : `osm_n_<id>` pour les nœuds OSM et `osm_way_<id>` pour les bâtiments, ce qui permet de retrouver chaque commerce sur OpenStreetMap.
+- **Pourtour = indicateur de visite** (et non de proximité) : les 172 marqueurs sont réglés sur 🔴 **rouge**, c'est-à-dire « à visiter / non visité ». Vous pouvez ensuite passer un point en 🟠 **orange** (en cours) ou 🟢 **vert** (visité) depuis sa fiche.
+- **Identifiants** : `osm_n_<id>` pour les nœuds OSM et `osm_way_<id>` pour les bâtiments, ce qui permet de retrouver chaque commerce sur OpenStreetMap ; `manuel_<enseigne>_<magasin>` pour les 6 enseignes Fnac / Darty / Boulanger ajoutées manuellement.
 
-> ℹ️ La clé de stockage local a été incrémentée (`carto_offline_lyon_guillotiere_v7`) afin que la nouvelle liste embarquée remplace l'ancienne sauvegarde du navigateur au premier chargement.
+> ℹ️ La clé de stockage local a été incrémentée (`carto_offline_lyon_guillotiere_v8`) afin que la nouvelle liste embarquée remplace l'ancienne sauvegarde du navigateur au premier chargement.
