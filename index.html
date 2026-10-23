@@ -995,6 +995,54 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     .cat-option:hover { background: var(--bg-hover); }
     .cat-option.selected { border-width: 2px; background: var(--accent-soft); }
+    .cat-color-swatch {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-left: auto;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.9), 0 0 0 3px rgba(15,23,42,0.12);
+    }
+
+    .border-color-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .border-color-selector {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; flex: 1;
+    }
+    .border-option {
+      border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px;
+      font-size: 12px; font-weight: 700; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; gap: 6px; background: #ffffff;
+      transition: all 0.15s; user-select: none;
+    }
+    .border-option:hover { background: var(--bg-hover); }
+    .border-option.selected { border-width: 2px; box-shadow: 0 2px 6px rgba(15,23,42,0.08); }
+    .border-swatch {
+      width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid #ffffff; box-shadow: 0 0 0 1px rgba(15,23,42,0.2);
+    }
+    .modal-pin-preview {
+      width: 52px; height: 54px; border-radius: 10px; background: var(--bg-subtle);
+      border: 1px solid var(--border); display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0;
+    }
+
+    .fiche-pourtour-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 6px; background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: 7px; padding: 4px 8px; margin-bottom: 7px; font-size: 11px;
+    }
+    .fiche-pourtour-label {
+      font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 5px;
+    }
+    .fiche-pourtour-btns {
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .pourtour-pill-btn {
+      border: 1px solid var(--border); background: #ffffff; border-radius: 999px;
+      padding: 2px 7px; font-size: 10.5px; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s;
+      color: var(--text-main);
+    }
+    .pourtour-pill-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .pourtour-pill-btn.active { border-width: 1.5px; }
     .modal-footer {
       padding: 12px 18px; background: var(--bg-subtle); border-top: 1px solid var(--border);
       display: flex; justify-content: flex-end; gap: 8px;
@@ -1038,67 +1086,72 @@ svg.leaflet-image-layer.leaflet-interactive path {
 - **Centre du périmètre** : Quartier de la Guillotière — Place Gabriel Péri, Lyon (`45.7547, 4.8422`)
 - **Rayon maximal autorisé** : 5,00 km (5 000 m)
 - **Nombre de marqueurs** : 5
-- **Dernière mise à jour** : 21/10/2026 19:30
+- **Dernière mise à jour** : 23/10/2026 20:00
 
 ## 📊 Tableau récapitulatif
 
-| # | Titre | Catégorie | Adresse / Quartier (Hors-ligne) | Latitude | Longitude | Distance Guillotière | Description | Créé le |
-|---|-------|-----------|---------------------------------|----------|-----------|----------------------|-------------|---------|
-| 1 | **Tabac Presse Gambetta** | 🚬 Tabac / Presse | Cours Gambetta — Lyon 7e (Guillotière Nord) | `45.75385` | `4.84610` | 317 m | Bureau de tabac, presse, loto et timbres fiscaux sur le Cours Gambetta. | 21/10/2026 19:30 |
-| 2 | **Lyon Mobile & Réparation** | 📱 Magasin de téléphonie | Rue Paul Bert — Lyon 3e (Guillotière Nord) | `45.75640` | `4.84480` | 277 m | Vente de smartphones, accessoires, coques, transfert et réparation express. | 21/10/2026 19:30 |
-| 3 | **Épicerie & Commerce du Monde** | 🛍️ Commerce / Boutique | Rue de Marseille — Lyon 7e (Guillotière Sud) | `45.75120` | `4.84060` | 408 m | Commerce de proximité, produits frais et spécialités internationales. | 21/10/2026 19:30 |
-| 4 | **Agence Bancaire & Distributeur** | 🏦 Banque / Distributeur | Avenue Jean Jaurès — Lyon 7e (Jean Macé) | `45.74690` | `4.84260` | 868 m | Agence bancaire avec distributeurs automatiques de billets 24h/24. | 21/10/2026 19:30 |
-| 5 | **Café & Terrasse Mazagran** | 🍽️ Restaurant / Café | Place Mazagran — Lyon 7e (Guillotière Sud) | `45.75195` | `4.84345` | 321 m | Café-restaurant de quartier avec grande terrasse sur la place. | 21/10/2026 19:30 |
+| # | Titre | Catégorie (Centre) | Pourtour | Adresse / Quartier (Hors-ligne) | Latitude | Longitude | Distance Guillotière | Description | Créé le |
+|---|-------|--------------------|----------|---------------------------------|----------|-----------|----------------------|-------------|---------|
+| 1 | **Tabac Presse Gambetta** | 🚬 Tabac / Presse | 🔴 Rouge | Cours Gambetta — Lyon 7e (Guillotière Nord) | `45.75385` | `4.84610` | 317 m | Bureau de tabac, presse, loto et timbres fiscaux sur le Cours Gambetta. | 23/10/2026 20:00 |
+| 2 | **Lyon Mobile & Réparation** | 📱 Magasin de téléphonie | 🟠 Orange | Rue Paul Bert — Lyon 3e (Guillotière Nord) | `45.75640` | `4.84480` | 277 m | Vente de smartphones, accessoires, coques, transfert et réparation express. | 23/10/2026 20:00 |
+| 3 | **Épicerie & Commerce du Monde** | 🛍️ Commerce / Boutique | 🟢 Vert | Rue de Marseille — Lyon 7e (Guillotière Sud) | `45.75120` | `4.84060` | 408 m | Commerce de proximité, produits frais et spécialités internationales. | 23/10/2026 20:00 |
+| 4 | **Agence Bancaire & Distributeur** | 🏦 Banque / Distributeur | 🟢 Vert | Avenue Jean Jaurès — Lyon 7e (Jean Macé) | `45.74690` | `4.84260` | 868 m | Agence bancaire avec distributeurs automatiques de billets 24h/24. | 23/10/2026 20:00 |
+| 5 | **Café & Terrasse Mazagran** | 🍽️ Restaurant / Café | 🟠 Orange | Place Mazagran — Lyon 7e (Guillotière Sud) | `45.75195` | `4.84345` | 321 m | Café-restaurant de quartier avec grande terrasse sur la place. | 23/10/2026 20:00 |
 
 ## 📌 Détail des marqueurs
 
 ### 1. Tabac Presse Gambetta
-- **Catégorie** : 🚬 Tabac / Presse (`tabac`)
+- **Catégorie (logo & couleur du centre)** : 🚬 Tabac / Presse (`tabac`)
+- **Pourtour (code 3 couleurs)** : 🔴 Rouge (`rouge`)
 - **Adresse / Secteur détecté** : Cours Gambetta — Lyon 7e (Guillotière Nord)
 - **Coordonnées GPS** : `45.75385, 4.84610`
 - **Distance de la Guillotière** : 317 m
-- **Date d'ajout** : 21/10/2026 19:30
+- **Date d'ajout** : 23/10/2026 20:00
 - **Description / Notes** :
   > Bureau de tabac, presse, loto et timbres fiscaux sur le Cours Gambetta.
 
 ### 2. Lyon Mobile & Réparation
-- **Catégorie** : 📱 Magasin de téléphonie (`telephonie`)
+- **Catégorie (logo & couleur du centre)** : 📱 Magasin de téléphonie (`telephonie`)
+- **Pourtour (code 3 couleurs)** : 🟠 Orange (`orange`)
 - **Adresse / Secteur détecté** : Rue Paul Bert — Lyon 3e (Guillotière Nord)
 - **Coordonnées GPS** : `45.75640, 4.84480`
 - **Distance de la Guillotière** : 277 m
-- **Date d'ajout** : 21/10/2026 19:30
+- **Date d'ajout** : 23/10/2026 20:00
 - **Description / Notes** :
   > Vente de smartphones, accessoires, coques, transfert et réparation express.
 
 ### 3. Épicerie & Commerce du Monde
-- **Catégorie** : 🛍️ Commerce / Boutique (`commerce`)
+- **Catégorie (logo & couleur du centre)** : 🛍️ Commerce / Boutique (`commerce`)
+- **Pourtour (code 3 couleurs)** : 🟢 Vert (`vert`)
 - **Adresse / Secteur détecté** : Rue de Marseille — Lyon 7e (Guillotière Sud)
 - **Coordonnées GPS** : `45.75120, 4.84060`
 - **Distance de la Guillotière** : 408 m
-- **Date d'ajout** : 21/10/2026 19:30
+- **Date d'ajout** : 23/10/2026 20:00
 - **Description / Notes** :
   > Commerce de proximité, produits frais et spécialités internationales.
 
 ### 4. Agence Bancaire & Distributeur
-- **Catégorie** : 🏦 Banque / Distributeur (`banque`)
+- **Catégorie (logo & couleur du centre)** : 🏦 Banque / Distributeur (`banque`)
+- **Pourtour (code 3 couleurs)** : 🟢 Vert (`vert`)
 - **Adresse / Secteur détecté** : Avenue Jean Jaurès — Lyon 7e (Jean Macé)
 - **Coordonnées GPS** : `45.74690, 4.84260`
 - **Distance de la Guillotière** : 868 m
-- **Date d'ajout** : 21/10/2026 19:30
+- **Date d'ajout** : 23/10/2026 20:00
 - **Description / Notes** :
   > Agence bancaire avec distributeurs automatiques de billets 24h/24.
 
 ### 5. Café & Terrasse Mazagran
-- **Catégorie** : 🍽️ Restaurant / Café (`restauration`)
+- **Catégorie (logo & couleur du centre)** : 🍽️ Restaurant / Café (`restauration`)
+- **Pourtour (code 3 couleurs)** : 🟠 Orange (`orange`)
 - **Adresse / Secteur détecté** : Place Mazagran — Lyon 7e (Guillotière Sud)
 - **Coordonnées GPS** : `45.75195, 4.84345`
 - **Distance de la Guillotière** : 321 m
-- **Date d'ajout** : 21/10/2026 19:30
+- **Date d'ajout** : 23/10/2026 20:00
 - **Description / Notes** :
   > Café-restaurant de quartier avec grande terrasse sur la place.
 
 <!-- CARTO_GUILLOTIERE_DATA_START
-[{"id":"m_sample_1","title":"Tabac Presse Gambetta","category":"tabac","address":"Cours Gambetta — Lyon 7e (Guillotière Nord)","description":"Bureau de tabac, presse, loto et timbres fiscaux sur le Cours Gambetta.","lat":45.75385,"lng":4.8461,"distance":317.4,"createdAt":"21/10/2026 19:30"},{"id":"m_sample_2","title":"Lyon Mobile & Réparation","category":"telephonie","address":"Rue Paul Bert — Lyon 3e (Guillotière Nord)","description":"Vente de smartphones, accessoires, coques, transfert et réparation express.","lat":45.7564,"lng":4.8448,"distance":277.1,"createdAt":"21/10/2026 19:30"},{"id":"m_sample_3","title":"Épicerie & Commerce du Monde","category":"commerce","address":"Rue de Marseille — Lyon 7e (Guillotière Sud)","description":"Commerce de proximité, produits frais et spécialités internationales.","lat":45.7512,"lng":4.8406,"distance":408.5,"createdAt":"21/10/2026 19:30"},{"id":"m_sample_4","title":"Agence Bancaire & Distributeur","category":"banque","address":"Avenue Jean Jaurès — Lyon 7e (Jean Macé)","description":"Agence bancaire avec distributeurs automatiques de billets 24h/24.","lat":45.7469,"lng":4.8426,"distance":868.2,"createdAt":"21/10/2026 19:30"},{"id":"m_sample_5","title":"Café & Terrasse Mazagran","category":"restauration","address":"Place Mazagran — Lyon 7e (Guillotière Sud)","description":"Café-restaurant de quartier avec grande terrasse sur la place.","lat":45.75195,"lng":4.84345,"distance":320.8,"createdAt":"21/10/2026 19:30"}]
+[{"id":"m_sample_1","title":"Tabac Presse Gambetta","category":"tabac","borderColor":"rouge","address":"Cours Gambetta — Lyon 7e (Guillotière Nord)","description":"Bureau de tabac, presse, loto et timbres fiscaux sur le Cours Gambetta.","lat":45.75385,"lng":4.8461,"distance":317.4,"createdAt":"23/10/2026 20:00"},{"id":"m_sample_2","title":"Lyon Mobile & Réparation","category":"telephonie","borderColor":"orange","address":"Rue Paul Bert — Lyon 3e (Guillotière Nord)","description":"Vente de smartphones, accessoires, coques, transfert et réparation express.","lat":45.7564,"lng":4.8448,"distance":277.1,"createdAt":"23/10/2026 20:00"},{"id":"m_sample_3","title":"Épicerie & Commerce du Monde","category":"commerce","borderColor":"vert","address":"Rue de Marseille — Lyon 7e (Guillotière Sud)","description":"Commerce de proximité, produits frais et spécialités internationales.","lat":45.7512,"lng":4.8406,"distance":408.5,"createdAt":"23/10/2026 20:00"},{"id":"m_sample_4","title":"Agence Bancaire & Distributeur","category":"banque","borderColor":"vert","address":"Avenue Jean Jaurès — Lyon 7e (Jean Macé)","description":"Agence bancaire avec distributeurs automatiques de billets 24h/24.","lat":45.7469,"lng":4.8426,"distance":868.2,"createdAt":"23/10/2026 20:00"},{"id":"m_sample_5","title":"Café & Terrasse Mazagran","category":"restauration","borderColor":"orange","address":"Place Mazagran — Lyon 7e (Guillotière Sud)","description":"Café-restaurant de quartier avec grande terrasse sur la place.","lat":45.75195,"lng":4.84345,"distance":320.8,"createdAt":"23/10/2026 20:00"}]
 CARTO_GUILLOTIERE_DATA_END -->
   </script>
 
@@ -1160,6 +1213,7 @@ CARTO_GUILLOTIERE_DATA_END -->
         <div class="sidebar-controls">
           <input type="search" id="searchInput" class="input-field" placeholder="Filtrer vos marqueurs (titre, rue, note)..." />
           <div class="category-chips" id="categoryFilterChips"></div>
+          <div class="category-chips" id="borderFilterChips"></div>
         </div>
         <div class="markers-list" id="markersList"></div>
       </div>
@@ -1254,8 +1308,16 @@ CARTO_GUILLOTIERE_DATA_END -->
           </div>
 
           <div class="form-group">
-            <label class="form-label">Catégorie & Couleur</label>
+            <label class="form-label">Catégorie (logo &amp; couleur dédiée au centre — 5 catégories)</label>
             <div class="category-selector" id="modalCategorySelector"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Pourtour de l'icône (code à 3 couleurs paramétrable)</label>
+            <div class="border-color-row">
+              <div class="border-color-selector" id="modalBorderColorSelector"></div>
+              <div class="modal-pin-preview" id="modalPinPreview" title="Aperçu de l'icône (pourtour + centre)"></div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -1298,16 +1360,43 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         name: "Quartier de la Guillotière — Place Gabriel Péri, Lyon"
       };
       const MAX_RADIUS_METERS = 5000;
-      const STORAGE_KEY = "carto_offline_lyon_guillotiere_v3";
+      const STORAGE_KEY = "carto_offline_lyon_guillotiere_v4";
+
+      const BORDER_COLORS = [
+        {
+          id: "vert",
+          label: "Vert",
+          dot: "🟢",
+          color: "#16a34a",
+          bg: "#dcfce7",
+          text: "#15803d"
+        },
+        {
+          id: "orange",
+          label: "Orange",
+          dot: "🟠",
+          color: "#f97316",
+          bg: "#ffedd5",
+          text: "#c2410c"
+        },
+        {
+          id: "rouge",
+          label: "Rouge",
+          dot: "🔴",
+          color: "#dc2626",
+          bg: "#fee2e2",
+          text: "#b91c1c"
+        }
+      ];
 
       const CATEGORIES = [
         {
           id: "tabac",
           label: "Tabac / Presse",
           icon: "🚬",
-          color: "#dc2626",
-          bg: "#fee2e2",
-          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="13" width="16" height="4" rx="1"/><line x1="14" y1="13" x2="14" y2="17"/><line x1="21" y1="13" x2="21" y2="17"/><path d="M18 9c0-1.5-1.5-2-1.5-3.5S18 3 18 3"/><path d="M21 9c0-1.5-1.5-2-1.5-3.5S21 3 21 3"/></svg>`
+          color: "#be123c",
+          bg: "#ffe4e6",
+          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="13" width="16" height="4" rx="1"/><line x1="14" y1="13" x2="14" y2="17"/><line x1="21" y1="13" x2="21" y2="17"/><path d="M18 9c0-1.5-1.5-2-1.5-3.5S18 3 18 3"/><path d="M21 9c0-1.5-1.5-2-1.5-3.5S21 3 21 3"/></svg>`
         },
         {
           id: "telephonie",
@@ -1315,23 +1404,23 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           icon: "📱",
           color: "#2563eb",
           bg: "#dbeafe",
-          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="10" y1="5" x2="14" y2="5"/><circle cx="12" cy="18.5" r="1"/></svg>`
+          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="10" y1="5" x2="14" y2="5"/><circle cx="12" cy="18.5" r="1"/></svg>`
         },
         {
           id: "commerce",
           label: "Commerce / Boutique",
           icon: "🛍️",
-          color: "#ea580c",
-          bg: "#ffedd5",
-          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l2-5h14l2 5"/><path d="M3 9c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3"/><path d="M5 12v8a1 1 0 001 1h12a1 1 0 001-1v-8"/><path d="M10 16h4v5h-4z"/></svg>`
+          color: "#b45309",
+          bg: "#fef3c7",
+          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l2-5h14l2 5"/><path d="M3 9c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3"/><path d="M5 12v8a1 1 0 001 1h12a1 1 0 001-1v-8"/><path d="M10 16h4v5h-4z"/></svg>`
         },
         {
           id: "banque",
           label: "Banque / Distributeur",
           icon: "🏦",
-          color: "#059669",
-          bg: "#d1fae5",
-          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 22 7 12 2"/><line x1="5" y1="10" x2="5" y2="17"/><line x1="10" y1="10" x2="10" y2="17"/><line x1="14" y1="10" x2="14" y2="17"/><line x1="19" y1="10" x2="19" y2="17"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`
+          color: "#0891b2",
+          bg: "#cffafe",
+          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 22 7 12 2"/><line x1="5" y1="10" x2="5" y2="17"/><line x1="10" y1="10" x2="10" y2="17"/><line x1="14" y1="10" x2="14" y2="17"/><line x1="19" y1="10" x2="19" y2="17"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`
         },
         {
           id: "restauration",
@@ -1339,7 +1428,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           icon: "🍽️",
           color: "#7c3aed",
           bg: "#f3e8ff",
-          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v7a3 3 0 006 0V3"/><line x1="7" y1="3" x2="7" y2="21"/><path d="M18 3c-2.5 0-4 2.5-4 6v4h4v8"/><line x1="18" y1="3" x2="18" y2="21"/></svg>`
+          svg: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v7a3 3 0 006 0V3"/><line x1="7" y1="3" x2="7" y2="21"/><path d="M18 3c-2.5 0-4 2.5-4 6v4h4v8"/><line x1="18" y1="3" x2="18" y2="21"/></svg>`
         }
       ];
 
@@ -2041,11 +2130,13 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       let markersData = [];
       let leafletMarkers = new Map();
       let activeCategoryFilter = "all";
+      let activeBorderFilter = "all";
       let searchQuery = "";
       let editingMarkerId = null;
       let pendingLatLng = null;
       let tempPreviewMarker = null;
       let selectedCategoryInModal = CATEGORIES[0].id;
+      let selectedBorderColorInModal = BORDER_COLORS[0].id;
       let fileHandle = null;
       let showIntermediateRings = false;
       let showTransitLayer = true;
@@ -2073,6 +2164,15 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         return CATEGORIES.find((c) => c.id === mappedId) || CATEGORIES[0];
       }
 
+      function getBorderColorById(borderId) {
+        if (!borderId) return BORDER_COLORS[0];
+        const normalized = String(borderId).toLowerCase().trim();
+        const direct = BORDER_COLORS.find(
+          (b) => b.id === normalized || normalized.includes(b.id) || normalized.includes(b.label.toLowerCase())
+        );
+        return direct || BORDER_COLORS[0];
+      }
+
       function escapeHtml(str) {
         return String(str || "")
           .replace(/&/g, "&amp;")
@@ -2082,28 +2182,33 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           .replace(/'/g, "&#039;");
       }
 
-      function createPinIcon(category, isPreview = false) {
+      function buildPinVisualHtml(category, borderColor, opacity = "1") {
         const cat = getCategoryById(category);
-        const opacity = isPreview ? "0.75" : "1";
+        const border = getBorderColorById(borderColor);
+        return `
+          <div style="position: relative; width: 38px; height: 46px; opacity: ${opacity}; filter: drop-shadow(0 3px 6px rgba(15,23,42,0.36));">
+            <svg viewBox="0 0 38 46" width="38" height="46" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 1.5C9.611 1.5 2 9.111 2 18.5c0 12.2 17 25.5 17 25.5s17-13.3 17-25.5C36 9.111 28.389 1.5 19 1.5z"
+                    fill="${border.color}" stroke="#ffffff" stroke-width="2.2"/>
+              <circle cx="19" cy="18.5" r="11.4" fill="#ffffff" stroke="${cat.color}" stroke-width="1.8"/>
+            </svg>
+            <div style="
+              position: absolute; top: 7px; left: 0; width: 38px; height: 23px;
+              display: flex; align-items: center; justify-content: center;
+              color: ${cat.color}; user-select: none;
+            ">${cat.svg || cat.icon}</div>
+          </div>
+        `;
+      }
+
+      function createPinIcon(category, borderColor = "vert", isPreview = false) {
+        const opacity = isPreview ? "0.78" : "1";
         return L.divIcon({
           className: "custom-pin-icon",
-          html: `
-            <div style="position: relative; width: 36px; height: 44px; opacity: ${opacity}; filter: drop-shadow(0 3px 6px rgba(15,23,42,0.34));">
-              <svg viewBox="0 0 36 44" width="36" height="44" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 1C8.611 1 1 8.611 1 18c0 11.75 17 25 17 25s17-13.25 17-25C35 8.611 27.389 1 18 1z"
-                      fill="${cat.color}" stroke="#ffffff" stroke-width="2.4"/>
-                <circle cx="18" cy="17.5" r="11.2" fill="#ffffff"/>
-              </svg>
-              <div style="
-                position: absolute; top: 6.5px; left: 0; width: 36px; height: 22px;
-                display: flex; align-items: center; justify-content: center;
-                color: ${cat.color}; user-select: none;
-              ">${cat.svg || cat.icon}</div>
-            </div>
-          `,
-          iconSize: [36, 44],
-          iconAnchor: [18, 43],
-          popupAnchor: [0, -39]
+          html: buildPinVisualHtml(category, borderColor, opacity),
+          iconSize: [38, 46],
+          iconAnchor: [19, 45],
+          popupAnchor: [0, -41]
         });
       }
 
@@ -2145,18 +2250,19 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         } else {
           lines.push("## 📊 Tableau récapitulatif");
           lines.push("");
-          lines.push("| # | Titre | Catégorie | Adresse / Quartier (Hors-ligne) | Latitude | Longitude | Distance Guillotière | Description | Créé le |");
-          lines.push("|---|-------|-----------|---------------------------------|----------|-----------|----------------------|-------------|---------|");
+          lines.push("| # | Titre | Catégorie (Centre) | Pourtour | Adresse / Quartier (Hors-ligne) | Latitude | Longitude | Distance Guillotière | Description | Créé le |");
+          lines.push("|---|-------|--------------------|----------|---------------------------------|----------|-----------|----------------------|-------------|---------|");
 
           markersData.forEach((m, idx) => {
             const cat = getCategoryById(m.category);
+            const border = getBorderColorById(m.borderColor);
             const cleanTitle = String(m.title || "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
             const cleanAddr = String(m.address || "—").replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
             const cleanDesc = String(m.description || "—").replace(/\|/g, "\\|").replace(/\r?\n/g, " <br> ");
             const distStr = formatDistance(m.distance);
             const dateStr = m.createdAt || "—";
             lines.push(
-              `| ${idx + 1} | **${cleanTitle}** | ${cat.icon} ${cat.label} | ${cleanAddr} | \`${Number(m.lat).toFixed(5)}\` | \`${Number(m.lng).toFixed(5)}\` | ${distStr} | ${cleanDesc} | ${dateStr} |`
+              `| ${idx + 1} | **${cleanTitle}** | ${cat.icon} ${cat.label} | ${border.dot} ${border.label} | ${cleanAddr} | \`${Number(m.lat).toFixed(5)}\` | \`${Number(m.lng).toFixed(5)}\` | ${distStr} | ${cleanDesc} | ${dateStr} |`
             );
           });
 
@@ -2166,11 +2272,13 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
 
           markersData.forEach((m, idx) => {
             const cat = getCategoryById(m.category);
+            const border = getBorderColorById(m.borderColor);
             const latFixed = Number(m.lat).toFixed(5);
             const lngFixed = Number(m.lng).toFixed(5);
 
             lines.push(`### ${idx + 1}. ${m.title}`);
-            lines.push(`- **Catégorie** : ${cat.icon} ${cat.label} (\`${cat.id}\`)`);
+            lines.push(`- **Catégorie (logo & couleur du centre)** : ${cat.icon} ${cat.label} (\`${cat.id}\`)`);
+            lines.push(`- **Pourtour (code 3 couleurs)** : ${border.dot} ${border.label} (\`${border.id}\`)`);
             if (m.address) lines.push(`- **Adresse / Secteur détecté** : ${m.address}`);
             lines.push(`- **Coordonnées GPS** : \`${latFixed}, ${lngFixed}\``);
             lines.push(`- **Distance de la Guillotière** : ${formatDistance(m.distance)}`);
@@ -2210,6 +2318,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
                     id: item.id || "m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
                     title: String(item.title || "Marqueur sans titre"),
                     category: getCategoryById(item.category).id,
+                    borderColor: getBorderColorById(item.borderColor || item.pourtour).id,
                     address: String(item.address || geo.fullAddress),
                     description: String(item.description || ""),
                     lat,
@@ -2239,13 +2348,16 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           if (cells.length >= 6) {
             const rawTitle = cells[1].replace(/\*\*/g, "").trim();
             const rawCat = cells[2].toLowerCase();
+            const hasPourtourCol = cells.length >= 10;
+            const rawPourtour = hasPourtourCol ? cells[3].toLowerCase() : "vert";
             const hasAddrCol = cells.length >= 8;
-            const addr = hasAddrCol ? cells[3] : "";
-            const latIdx = hasAddrCol ? 4 : 3;
-            const lngIdx = hasAddrCol ? 5 : 4;
-            const descIdx = hasAddrCol ? 7 : 6;
-            const dateIdx = hasAddrCol ? 8 : 7;
+            const addrIdx = hasPourtourCol ? 4 : hasAddrCol ? 3 : -1;
+            const latIdx = hasPourtourCol ? 5 : hasAddrCol ? 4 : 3;
+            const lngIdx = hasPourtourCol ? 6 : hasAddrCol ? 5 : 4;
+            const descIdx = hasPourtourCol ? 8 : hasAddrCol ? 7 : 6;
+            const dateIdx = hasPourtourCol ? 9 : hasAddrCol ? 8 : 7;
 
+            const addr = addrIdx >= 0 ? cells[addrIdx] : "";
             const lat = parseFloat((cells[latIdx] || "").replace(/`/g, ""));
             const lng = parseFloat((cells[lngIdx] || "").replace(/`/g, ""));
             const rawDesc = cells[descIdx] ? cells[descIdx].replace(/<br>/g, "\n").trim() : "";
@@ -2253,11 +2365,13 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             if (!isNaN(lat) && !isNaN(lng)) {
               const matchedCat =
                 CATEGORIES.find((c) => rawCat.includes(c.id) || rawCat.includes(c.label.toLowerCase())) || CATEGORIES[0];
+              const matchedBorder = getBorderColorById(rawPourtour);
               const geo = reverseGeocodeOffline(lat, lng);
               imported.push({
                 id: "m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
                 title: rawTitle || "Marqueur importé",
                 category: matchedCat.id,
+                borderColor: matchedBorder.id,
                 address: addr && addr !== "—" ? addr : geo.fullAddress,
                 description: rawDesc === "—" ? "" : rawDesc,
                 lat,
@@ -2409,16 +2523,17 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       }
 
       function addOrUpdateLeafletMarker(markerObj) {
+        markerObj.borderColor = getBorderColorById(markerObj.borderColor).id;
         if (leafletMarkers.has(markerObj.id)) {
           const existing = leafletMarkers.get(markerObj.id);
           existing.setLatLng([markerObj.lat, markerObj.lng]);
-          existing.setIcon(createPinIcon(markerObj.category));
+          existing.setIcon(createPinIcon(markerObj.category, markerObj.borderColor));
           existing.setPopupContent(buildPopupHtml(markerObj));
           return existing;
         }
 
         const lfMarker = L.marker([markerObj.lat, markerObj.lng], {
-          icon: createPinIcon(markerObj.category),
+          icon: createPinIcon(markerObj.category, markerObj.borderColor),
           draggable: true
         }).addTo(map);
 
@@ -2455,6 +2570,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
 
       function buildPopupHtml(markerObj) {
         const cat = getCategoryById(markerObj.category);
+        const border = getBorderColorById(markerObj.borderColor);
         const addrHtml = markerObj.address
           ? `<div class="popup-addr">📍 ${escapeHtml(markerObj.address)}</div>`
           : "";
@@ -2462,12 +2578,33 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           ? `<div class="popup-desc">${escapeHtml(markerObj.description)}</div>`
           : "";
 
+        const pourtourButtonsHtml = BORDER_COLORS.map((b) => {
+          const isActive = b.id === border.id;
+          const activeStyle = isActive
+            ? `border-color: ${b.color}; background: ${b.bg}; color: ${b.text};`
+            : "";
+          return `<button type="button" class="pourtour-pill-btn ${isActive ? "active" : ""}" style="${activeStyle}" onclick="window.__cartoSetBorderColor('${markerObj.id}', '${b.id}')">
+            <span class="dot" style="background:${b.color};"></span>
+            <span>${escapeHtml(b.label)}</span>
+          </button>`;
+        }).join("");
+
         return `
-          <div style="min-width: 220px;">
+          <div style="min-width: 240px;">
             <div class="popup-title">${escapeHtml(markerObj.title)}</div>
-            <span class="popup-cat" style="background: ${cat.bg}; color: ${cat.color}; display: inline-flex; align-items: center; gap: 5px;">
-              ${cat.svg || cat.icon} <span>${escapeHtml(cat.label)}</span>
-            </span>
+            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-bottom:6px;">
+              <span class="popup-cat" style="background: ${cat.bg}; color: ${cat.color}; display: inline-flex; align-items: center; gap: 5px; margin-bottom:0;">
+                ${cat.svg || cat.icon} <span>${escapeHtml(cat.label)}</span>
+              </span>
+              <span class="popup-cat" style="background: ${border.bg}; color: ${border.text}; border: 1px solid ${border.color}; display: inline-flex; align-items: center; gap: 4px; margin-bottom:0;">
+                <span class="dot" style="background:${border.color};"></span>
+                <span>Pourtour ${escapeHtml(border.label)}</span>
+              </span>
+            </div>
+            <div class="fiche-pourtour-bar">
+              <span class="fiche-pourtour-label">Pourtour :</span>
+              <div class="fiche-pourtour-btns">${pourtourButtonsHtml}</div>
+            </div>
             ${addrHtml}
             ${descHtml}
             <div class="popup-meta">
@@ -2481,6 +2618,20 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           </div>
         `;
       }
+
+      window.__cartoSetBorderColor = function (id, newBorderId) {
+        const m = markersData.find((item) => item.id === id);
+        if (!m) return;
+        const border = getBorderColorById(newBorderId);
+        m.borderColor = border.id;
+        addOrUpdateLeafletMarker(m);
+        renderSidebarList();
+        saveAndSyncAll();
+        showToast(
+          `Pourtour de « <strong>${escapeHtml(m.title)}</strong> » passé en <strong>${escapeHtml(border.label)}</strong> (${border.dot}).`,
+          "success"
+        );
+      };
 
       window.__cartoEditMarker = function (id) {
         const m = markersData.find((item) => item.id === id);
@@ -2509,7 +2660,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         const container = document.getElementById("categoryFilterChips");
         let html = `
           <button type="button" class="chip ${activeCategoryFilter === "all" ? "active" : ""}" data-cat="all">
-            Tous (${markersData.length})
+            Toutes catégories (${markersData.length})
           </button>
         `;
         CATEGORIES.forEach((cat) => {
@@ -2532,19 +2683,50 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         });
       }
 
+      function renderBorderFilterChips() {
+        const container = document.getElementById("borderFilterChips");
+        if (!container) return;
+        let html = `
+          <button type="button" class="chip ${activeBorderFilter === "all" ? "active" : ""}" data-border="all">
+            Tous pourtours
+          </button>
+        `;
+        BORDER_COLORS.forEach((b) => {
+          const count = markersData.filter((m) => getBorderColorById(m.borderColor).id === b.id).length;
+          html += `
+            <button type="button" class="chip ${activeBorderFilter === b.id ? "active" : ""}" data-border="${b.id}">
+              <span class="dot" style="background:${b.color};"></span>
+              <span>Pourtour ${escapeHtml(b.label)} (${count})</span>
+            </button>
+          `;
+        });
+        container.innerHTML = html;
+
+        container.querySelectorAll(".chip").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            activeBorderFilter = btn.getAttribute("data-border");
+            renderBorderFilterChips();
+            renderSidebarList();
+          });
+        });
+      }
+
       function renderSidebarList() {
         renderCategoryFilterChips();
+        renderBorderFilterChips();
         const listEl = document.getElementById("markersList");
 
         const filtered = markersData.filter((m) => {
           const matchesCat = activeCategoryFilter === "all" || m.category === activeCategoryFilter;
+          const borderId = getBorderColorById(m.borderColor).id;
+          const matchesBorder = activeBorderFilter === "all" || borderId === activeBorderFilter;
           const q = searchQuery.trim().toLowerCase();
-          if (!q) return matchesCat;
+          if (!q) return matchesCat && matchesBorder;
           const inTitle = (m.title || "").toLowerCase().includes(q);
           const inAddr = (m.address || "").toLowerCase().includes(q);
           const inDesc = (m.description || "").toLowerCase().includes(q);
           const inCoords = `${m.lat}, ${m.lng}`.includes(q);
-          return matchesCat && (inTitle || inAddr || inDesc || inCoords);
+          return matchesCat && matchesBorder && (inTitle || inAddr || inDesc || inCoords);
         });
 
         if (filtered.length === 0) {
@@ -2556,7 +2738,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
                 ${
                   markersData.length === 0
                     ? "Cliquez n'importe où dans le <strong>cercle bleu de 5 km</strong> autour de la Guillotière pour poser un marqueur."
-                    : "Modifiez votre recherche ou sélectionnez « Tous »."
+                    : "Modifiez votre recherche ou réinitialisez les filtres."
                 }
               </p>
             </div>
@@ -2567,9 +2749,23 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         listEl.innerHTML = "";
         filtered.forEach((m) => {
           const cat = getCategoryById(m.category);
+          const border = getBorderColorById(m.borderColor);
           const card = document.createElement("div");
           card.className = "marker-card";
-          card.style.borderLeftColor = cat.color;
+          card.style.borderLeftColor = border.color;
+
+          const pourtourBtns = BORDER_COLORS.map((b) => {
+            const isActive = b.id === border.id;
+            const activeStyle = isActive
+              ? `border-color: ${b.color}; background: ${b.bg}; color: ${b.text};`
+              : "";
+            return `
+              <button type="button" class="pourtour-pill-btn ${isActive ? "active" : ""}" data-border-id="${b.id}" style="${activeStyle}" title="Passer le pourtour en ${escapeHtml(b.label)}">
+                <span class="dot" style="background:${b.color};"></span>
+                <span>${escapeHtml(b.label)}</span>
+              </button>
+            `;
+          }).join("");
 
           card.innerHTML = `
             <div class="marker-card-header">
@@ -2577,6 +2773,13 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
               <span class="marker-card-cat" style="background: ${cat.bg}; color: ${cat.color}; display: inline-flex; align-items: center; gap: 4px;">
                 ${cat.svg || cat.icon} <span>${escapeHtml(cat.label)}</span>
               </span>
+            </div>
+            <div class="fiche-pourtour-bar">
+              <span class="fiche-pourtour-label">
+                <span class="dot" style="background:${border.color};"></span>
+                <span>Pourtour :</span>
+              </span>
+              <div class="fiche-pourtour-btns">${pourtourBtns}</div>
             </div>
             ${m.address ? `<div class="marker-card-addr">📍 ${escapeHtml(m.address)}</div>` : ""}
             ${m.description ? `<div class="marker-card-desc">${escapeHtml(m.description)}</div>` : ""}
@@ -2586,14 +2789,22 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
                 <span style="margin-left: 5px;">• 📏 ${formatDistance(m.distance)}</span>
               </div>
               <div class="marker-card-actions">
-                <button type="button" class="icon-btn edit" title="Modifier">✏️</button>
+                <button type="button" class="icon-btn edit" title="Modifier la fiche">✏️</button>
                 <button type="button" class="icon-btn delete" title="Supprimer">🗑️</button>
               </div>
             </div>
           `;
 
+          card.querySelectorAll(".pourtour-pill-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const newB = btn.getAttribute("data-border-id");
+              window.__cartoSetBorderColor(m.id, newB);
+            });
+          });
+
           card.addEventListener("click", (e) => {
-            if (e.target.closest(".icon-btn")) return;
+            if (e.target.closest(".icon-btn") || e.target.closest(".pourtour-pill-btn")) return;
             const lf = leafletMarkers.get(m.id);
             if (lf) {
               map.flyTo([m.lat, m.lng], Math.max(map.getZoom(), 16), { duration: 0.45 });
@@ -2615,6 +2826,16 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         });
       }
 
+      function updateModalPinPreview() {
+        const previewEl = document.getElementById("modalPinPreview");
+        if (previewEl) {
+          previewEl.innerHTML = buildPinVisualHtml(selectedCategoryInModal, selectedBorderColorInModal, "1");
+        }
+        if (tempPreviewMarker) {
+          tempPreviewMarker.setIcon(createPinIcon(selectedCategoryInModal, selectedBorderColorInModal, true));
+        }
+      }
+
       function renderModalCategories() {
         const container = document.getElementById("modalCategorySelector");
         container.innerHTML = "";
@@ -2626,13 +2847,41 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             div.style.borderColor = cat.color;
             div.style.background = cat.bg;
           }
-          div.innerHTML = `<span style="display:inline-flex;align-items:center;color:${cat.color};">${cat.svg || cat.icon}</span><span>${escapeHtml(cat.label)}</span>`;
+          div.innerHTML = `
+            <span style="display:inline-flex;align-items:center;color:${cat.color};">${cat.svg || cat.icon}</span>
+            <span>${escapeHtml(cat.label)}</span>
+            <span class="cat-color-swatch" style="background:${cat.color};" title="Couleur dédiée du centre : ${cat.color}"></span>
+          `;
           div.addEventListener("click", () => {
             selectedCategoryInModal = cat.id;
             renderModalCategories();
-            if (tempPreviewMarker) {
-              tempPreviewMarker.setIcon(createPinIcon(selectedCategoryInModal, true));
-            }
+            updateModalPinPreview();
+          });
+          container.appendChild(div);
+        });
+      }
+
+      function renderModalBorderColors() {
+        const container = document.getElementById("modalBorderColorSelector");
+        if (!container) return;
+        container.innerHTML = "";
+        BORDER_COLORS.forEach((b) => {
+          const isSelected = b.id === selectedBorderColorInModal;
+          const div = document.createElement("div");
+          div.className = `border-option ${isSelected ? "selected" : ""}`;
+          if (isSelected) {
+            div.style.borderColor = b.color;
+            div.style.background = b.bg;
+            div.style.color = b.text;
+          }
+          div.innerHTML = `
+            <span class="border-swatch" style="background:${b.color};"></span>
+            <span>${escapeHtml(b.label)}</span>
+          `;
+          div.addEventListener("click", () => {
+            selectedBorderColorInModal = b.id;
+            renderModalBorderColors();
+            updateModalPinPreview();
           });
           container.appendChild(div);
         });
@@ -2652,11 +2901,12 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           editingMarkerId = marker.id;
           pendingLatLng = { lat: marker.lat, lng: marker.lng, distance: marker.distance };
           const geo = reverseGeocodeOffline(marker.lat, marker.lng);
-          modalTitle.textContent = "✏️ Modifier le marqueur";
+          modalTitle.textContent = "✏️ Modifier la fiche du marqueur";
           inputTitle.value = marker.title;
           inputAddr.value = marker.address || geo.fullAddress;
           inputDesc.value = marker.description || "";
-          selectedCategoryInModal = marker.category;
+          selectedCategoryInModal = getCategoryById(marker.category).id;
+          selectedBorderColorInModal = getBorderColorById(marker.borderColor).id;
           coordsText.textContent = `${Number(marker.lat).toFixed(5)}, ${Number(marker.lng).toFixed(5)}`;
           distText.textContent = formatDistance(marker.distance);
           stationText.textContent = geo.stationInfo;
@@ -2667,7 +2917,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           pendingLatLng = { lat, lng, distance };
           const geo = reverseGeocodeOffline(lat, lng);
 
-          modalTitle.textContent = "📍 Nouveau marqueur dans les 5 km";
+          modalTitle.textContent = "📍 Nouvelle fiche marqueur dans les 5 km";
           inputTitle.value = geo.street ? geo.street : `Marqueur #${markersData.length + 1}`;
           inputAddr.value = geo.fullAddress;
           inputDesc.value = "";
@@ -2677,11 +2927,13 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
 
           clearTempPreviewMarker();
           tempPreviewMarker = L.marker([lat, lng], {
-            icon: createPinIcon(selectedCategoryInModal, true)
+            icon: createPinIcon(selectedCategoryInModal, selectedBorderColorInModal, true)
           }).addTo(map);
         }
 
         renderModalCategories();
+        renderModalBorderColors();
+        updateModalPinPreview();
         modal.classList.add("open");
         setTimeout(() => {
           inputTitle.focus();
@@ -2858,6 +3110,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             existing.address = address;
             existing.description = description;
             existing.category = selectedCategoryInModal;
+            existing.borderColor = selectedBorderColorInModal;
             addOrUpdateLeafletMarker(existing);
             showToast(`Marqueur « <strong>${escapeHtml(title)}</strong> » mis à jour dans le .md.`, "success");
           }
@@ -2866,6 +3119,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             id: "m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
             title,
             category: selectedCategoryInModal,
+            borderColor: selectedBorderColorInModal,
             address,
             description,
             lat: pendingLatLng.lat,

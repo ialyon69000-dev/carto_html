@@ -12,12 +12,17 @@ Application cartographique **totalement autonome (100% hors-ligne)** centrée su
     - **389 parcs et jardins** (Parc de la Tête d'Or, Parc Sergent Blandan, Parc de Gerland, Berges du Rhône...).
     - **30 quartiers officiels**, les 9 arrondissements de Lyon et **12 communes limitrophes** (Villeurbanne, Bron, Vénissieux, Oullins-Pierre-Bénite, Caluire-et-Cuire, Sainte-Foy-lès-Lyon, La Mulatière, Tassin...).
     - **Réseau TCL** : lignes et stations de **Métro (A, B, C, D)**, **Funiculaires (F1, F2)** et **Tramways (T1 à T6)**.
-  - **5 types d'objets et icônes dédiés** :
-    - 🚬 **Tabac / Presse** (`tabac`)
-    - 📱 **Magasin de téléphonie** (`telephonie`)
-    - 🛍️ **Commerce / Boutique** (`commerce`)
-    - 🏦 **Banque / Distributeur** (`banque`)
-    - 🍽️ **Restaurant / Café** (`restauration`)
+  - **Icônes à double codage visuel (Pourtour + Centre)** :
+    - **Pourtour paramétrable à 3 couleurs** (modifiable dans la fiche modale, la fiche latérale ou l'infobulle sur la carte) :
+      - 🟢 **Vert** (`vert` — `#16a34a`)
+      - 🟠 **Orange** (`orange` — `#f97316`)
+      - 🔴 **Rouge** (`rouge` — `#dc2626`)
+    - **Centre avec logo du type et couleur dédiée pour chacune des 5 catégories** :
+      - 🚬 **Tabac / Presse** (`tabac` — Carmin `#be123c`)
+      - 📱 **Magasin de téléphonie** (`telephonie` — Bleu `#2563eb`)
+      - 🛍️ **Commerce / Boutique** (`commerce` — Ambre `#b45309`)
+      - 🏦 **Banque / Distributeur** (`banque` — Cyan `#0891b2`)
+      - 🍽️ **Restaurant / Café** (`restauration` — Violet `#7c3aed`)
   - **Fichier `.md` directement inclus** dans `index.html` (`<script id="embedded-markdown" type="text/markdown">`) et synchronisé en temps réel.
 - **Périmètre strict de 5,00 km** autour de la Guillotière (`45.7547, 4.8422`) sans marqueur central encombrant la carte :
   - Tout clic ou déplacement en dehors du cercle de 5 km est bloqué avec indication de la distance exacte.
