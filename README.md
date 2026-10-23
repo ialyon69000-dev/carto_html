@@ -30,3 +30,17 @@ Application cartographique **totalement autonome (100% hors-ligne)** centrée su
   1. **Automatique** dans le navigateur + dans le bloc `<script id="embedded-markdown">` interne.
   2. **Export / Liaison du fichier `marqueurs-guillotiere.md`** (compatible avec l'API *File System Access* pour écriture directe sur disque à chaque clic).
   3. **Bouton « 📦 Exporter HTML tout-en-un »** : génère un nouveau fichier `index.html` contenant à la fois la carte de Lyon hors-ligne ET vos marqueurs `.md` mis à jour.
+
+## 📦 Contenu de `marqueurs-guillotiere.md` (mise à jour du 23/10/2026)
+
+Le fichier Markdown — également embarqué dans `index.html` via `<script id="embedded-markdown">` — contient désormais la **liste complète des commerces du périmètre de 5 km** :
+
+- **166 marqueurs** au total, tous à moins de 5,00 km de la Guillotière :
+  - 🚬 **90 bureaux de tabac / presse** (catégorie `tabac`) ;
+  - 📱 **76 magasins de téléphonie** (catégorie `telephonie`).
+- **Source** : OpenStreetMap (licence ODbL), requête Overpass sur les tags `shop=tobacco` et `shop=mobile_phone`, données OSM au **03/08/2026**.
+- **Adresses** : numéro + rue lorsqu'il existe dans OSM, sinon rue la plus proche calculée **hors-ligne** avec le réseau viaire embarqué, puis quartier ou commune.
+- **Code couleur du pourtour** (distance au centre) : 🟢 vert ≤ 1 km · 🟠 orange de 1 à 3 km · 🔴 rouge > 3 km.
+- **Identifiants** : `osm_n_<id>` pour les nœuds OSM et `osm_way_<id>` pour les bâtiments, ce qui permet de retrouver chaque commerce sur OpenStreetMap.
+
+> ℹ️ La clé de stockage local a été incrémentée (`carto_offline_lyon_guillotiere_v5`) afin que la nouvelle liste embarquée remplace l'ancienne sauvegarde du navigateur au premier chargement.
