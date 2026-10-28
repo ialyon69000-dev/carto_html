@@ -2578,9 +2578,9 @@ CARTO_GUILLOTIERE_DATA_END -->
     </div>
 
     <div class="header-actions">
-      <button type="button" id="btnBindFile" class="btn btn-ghost-dark" title="Lier un fichier marqueurs-guillotiere.md local pour écriture automatique à chaque clic">
+      <button type="button" id="btnBindFile" class="btn btn-ghost-dark" title="Choisir un fichier .md à remplacer puis à synchroniser automatiquement pendant cette session">
         <span>🔗</span>
-        <span id="bindFileLabel">Lier fichier .md (Auto)</span>
+        <span id="bindFileLabel">Activer sauvegarde .md automatique</span>
       </button>
 
       <label for="fileImportInput" class="btn btn-ghost-dark" title="Charger les marqueurs depuis un fichier .md">
@@ -2589,9 +2589,9 @@ CARTO_GUILLOTIERE_DATA_END -->
       </label>
       <input type="file" id="fileImportInput" accept=".md,.markdown,.txt" style="display: none;" />
 
-      <button type="button" id="btnExportMd" class="btn btn-primary" title="Enregistrer les marqueurs dans le fichier marqueurs-guillotiere.md">
+      <button type="button" id="btnExportMd" class="btn btn-primary" title="Télécharger une copie Markdown des marqueurs">
         <span>💾</span>
-        <span>Enregistrer .md (<span id="exportCount">0</span>)</span>
+        <span>Télécharger .md (<span id="exportCount">0</span>)</span>
       </button>
 
       <button type="button" id="btnExportStandaloneHtml" class="btn btn-emerald" title="Exporter un fichier index.html unique contenant la carte hors-ligne ET vos marqueurs .md mis à jour (1 seul fichier à emporter !)">
@@ -2630,7 +2630,7 @@ CARTO_GUILLOTIERE_DATA_END -->
             <span style="font-size: 12px; font-weight: 700; color: var(--text-main);">marqueurs-guillotiere.md</span>
             <div style="display: flex; gap: 6px;">
               <button type="button" id="btnCopyMd" class="btn btn-outline btn-sm">📋 Copier</button>
-              <button type="button" id="btnDownloadMdFromTab" class="btn btn-primary btn-sm">💾 Enregistrer .md</button>
+              <button type="button" id="btnDownloadMdFromTab" class="btn btn-primary btn-sm">💾 Télécharger .md</button>
             </div>
           </div>
           <textarea id="mdLiveOutput" class="md-textarea" readonly spellcheck="false"></textarea>
@@ -2640,7 +2640,7 @@ CARTO_GUILLOTIERE_DATA_END -->
       <div class="sidebar-footer">
         <div class="sync-indicator">
           <span class="sync-dot" id="syncDot"></span>
-          <span id="syncStatusText">Carte & .md autonomes prêts</span>
+          <span id="syncStatusText" role="status" aria-live="polite">Sauvegarde .md automatique inactive — téléchargez une copie</span>
         </div>
         <button type="button" id="btnClearAll" class="btn btn-danger-outline btn-sm">Tout effacer</button>
       </div>
@@ -3648,6 +3648,9 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       let selectedBorderColorInModal = DEFAULT_BORDER_COLOR;
       let activePurchaseMarkerId = null;
       let fileHandle = null;
+      let fileWriteQueue = Promise.resolve();
+      let fileSaveVersion = 0;
+      let localStorageFailed = false;
       let showTransitLayer = true;
 
       function getDistanceFromGuillotiere(lat, lng) {
@@ -4132,34 +4135,62 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         return imported;
       }
 
-      async function saveAndSyncAll() {
+      // Les écritures sont sérialisées : une modification ancienne ne peut pas
+      // terminer après une modification plus récente et écraser la sauvegarde.
+      function saveAndSyncAll() {
         const mdContent = generateMarkdownContent();
-
         const embeddedMdEl = document.getElementById("embedded-markdown");
-        if (embeddedMdEl) {
-          embeddedMdEl.textContent = "\n" + mdContent + "\n  ";
-        }
+        if (embeddedMdEl) embeddedMdEl.textContent = "\n" + mdContent + "\n  ";
 
         try {
           localStorage.setItem(STORAGE_KEY, mdContent);
-        } catch (e) {
-          console.warn("localStorage error:", e);
+          localStorageFailed = false;
+        } catch (err) {
+          console.warn("Erreur de sauvegarde dans le navigateur :", err);
+          if (!localStorageFailed) {
+            showToast("Sauvegarde dans le navigateur impossible. Téléchargez une copie .md pour protéger vos données.", "error");
+          }
+          localStorageFailed = true;
         }
 
         document.getElementById("mdLiveOutput").value = mdContent;
         document.getElementById("markerCountBadge").textContent = markersData.length;
         document.getElementById("exportCount").textContent = markersData.length;
 
-        if (fileHandle) {
+        const handle = fileHandle;
+        if (!handle) {
+          document.getElementById("syncStatusText").textContent = localStorageFailed
+            ? "Sauvegarde navigateur impossible — téléchargez une copie .md"
+            : "Sauvegarde .md automatique inactive — téléchargez une copie";
+          return Promise.resolve(false);
+        }
+
+        const version = ++fileSaveVersion;
+        document.getElementById("syncStatusText").textContent = `Enregistrement dans ${handle.name}…`;
+        const write = fileWriteQueue.then(async () => {
+          let writable;
           try {
-            const writable = await fileHandle.createWritable();
+            writable = await handle.createWritable();
             await writable.write(mdContent);
             await writable.close();
-            document.getElementById("syncStatusText").textContent = `Synchronisé dans ${fileHandle.name}`;
+            if (fileHandle === handle && version === fileSaveVersion) {
+              document.getElementById("syncStatusText").textContent = `Sauvegardé dans ${handle.name}`;
+            }
+            return true;
           } catch (err) {
+            if (writable && typeof writable.abort === "function") {
+              try { await writable.abort(); } catch (_) { /* l’écriture a déjà échoué */ }
+            }
             console.error("Erreur écriture fichier .md lié :", err);
+            if (fileHandle === handle) {
+              document.getElementById("syncStatusText").textContent = `Échec de sauvegarde dans ${handle.name} — téléchargez une copie`;
+              showToast("Écriture du fichier .md impossible. Téléchargez une copie ou reliez à nouveau un fichier.", "error");
+            }
+            return false;
           }
-        }
+        });
+        fileWriteQueue = write.then(() => undefined);
+        return write;
       }
 
       function downloadMarkdownFile() {
@@ -4173,7 +4204,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showToast("Fichier <strong>marqueurs-guillotiere.md</strong> enregistré !", "success");
+        showToast("Téléchargement de <strong>marqueurs-guillotiere.md</strong> lancé. Vérifiez votre dossier de téléchargements.", "info");
       }
 
       function exportStandaloneHtmlWithEmbeddedMd() {
@@ -4192,6 +4223,12 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           mapClone.removeAttribute("style");
           mapClone.removeAttribute("tabindex");
         }
+        const bindClone = bodyClone.querySelector("#btnBindFile");
+        if (bindClone) bindClone.classList.remove("active-sync");
+        const bindLabelClone = bodyClone.querySelector("#bindFileLabel");
+        if (bindLabelClone) bindLabelClone.textContent = "Activer sauvegarde .md automatique";
+        const syncClone = bodyClone.querySelector("#syncStatusText");
+        if (syncClone) syncClone.textContent = "Sauvegarde .md automatique inactive — téléchargez une copie";
         const toastClone = bodyClone.querySelector("#toastContainer");
         if (toastClone) toastClone.innerHTML = "";
         const modalClone = bodyClone.querySelector("#markerModal");
@@ -4258,33 +4295,27 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
 
       async function bindLocalMarkdownFile() {
         if (!("showSaveFilePicker" in window)) {
-          showToast(
-            "Téléchargement direct du fichier <strong>marqueurs-guillotiere.md</strong>.",
-            "info"
-          );
+          showToast("La sauvegarde automatique dans un fichier n’est pas prise en charge ici. Téléchargez une copie .md après vos modifications.", "info");
           downloadMarkdownFile();
           return;
         }
+        if (!confirm("Le fichier choisi sera remplacé par les données actuellement affichées, puis mis à jour automatiquement pendant cette session. Pour restaurer une sauvegarde existante, utilisez d’abord « Ouvrir .md ». Continuer ?")) return;
         try {
-          fileHandle = await window.showSaveFilePicker({
+          const chosenHandle = await window.showSaveFilePicker({
             suggestedName: "marqueurs-guillotiere.md",
-            types: [
-              {
-                description: "Fichier Markdown (.md)",
-                accept: { "text/markdown": [".md", ".markdown"] }
-              }
-            ]
+            types: [{ description: "Fichier Markdown (.md)", accept: { "text/markdown": [".md", ".markdown"] } }]
           });
+          fileHandle = chosenHandle;
           document.getElementById("btnBindFile").classList.add("active-sync");
-          document.getElementById("bindFileLabel").textContent = "Lié : " + fileHandle.name;
-          await saveAndSyncAll();
-          showToast(
-            `Fichier <strong>${escapeHtml(fileHandle.name)}</strong> lié ! Chaque marqueur ajouté sera écrit automatiquement dedans.`,
-            "success"
-          );
+          document.getElementById("bindFileLabel").textContent = "Lié : " + chosenHandle.name;
+          const saved = await saveAndSyncAll();
+          if (saved && fileHandle === chosenHandle) {
+            showToast(`Fichier <strong>${escapeHtml(chosenHandle.name)}</strong> lié et sauvegardé. Les modifications suivantes seront enregistrées automatiquement pendant cette session.`, "success");
+          }
         } catch (err) {
           if (err.name !== "AbortError") {
-            downloadMarkdownFile();
+            console.error("Impossible de sélectionner le fichier .md :", err);
+            showToast("Impossible de lier le fichier .md. Téléchargez une copie à la place.", "error");
           }
         }
       }
@@ -5371,7 +5402,9 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           const content = String(evt.target.result || "");
           const imported = parseMarkdownToMarkers(content);
 
-          if (imported.length === 0) {
+          // Un export valide peut intentionnellement contenir une liste vide.
+          const emptyBackup = /<!--\s*CARTO_GUILLOTIERE_DATA_START\s*\[\s*\]\s*CARTO_GUILLOTIERE_DATA_END\s*-->/.test(content);
+          if (imported.length === 0 && !emptyBackup) {
             showToast("Aucun marqueur valide trouvé dans ce fichier .md.", "error");
             e.target.value = "";
             return;
@@ -5386,6 +5419,20 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
               skippedOut++;
             }
           });
+
+          if (imported.length > 0 && validMarkers.length === 0) {
+            showToast("Aucun marqueur du fichier ne se trouve dans la zone couverte. Les données actuelles sont conservées.", "error");
+            e.target.value = "";
+            return;
+          }
+
+          const warning = fileHandle
+            ? `Les données actuelles seront remplacées et le fichier lié « ${fileHandle.name} » sera écrasé. Continuer ?`
+            : "Les données actuelles seront remplacées par le contenu de ce fichier. Continuer ?";
+          if (!confirm(warning)) {
+            e.target.value = "";
+            return;
+          }
 
           cancelMarkerMove();
           leafletMarkers.forEach((lf) => map.removeLayer(lf));
@@ -5414,6 +5461,10 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           } else {
             showToast(`${validMarkers.length} marqueur(s) chargé(s) depuis <strong>${escapeHtml(file.name)}</strong> !`, "success");
           }
+          e.target.value = "";
+        };
+        reader.onerror = () => {
+          showToast("Impossible de lire ce fichier .md. Les données actuelles sont conservées.", "error");
           e.target.value = "";
         };
         reader.readAsText(file, "UTF-8");

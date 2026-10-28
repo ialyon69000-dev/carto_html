@@ -33,10 +33,18 @@ Application cartographique **totalement autonome (100% hors-ligne)** centrée su
 - **Zone couverte de 5,00 km** autour de la Guillotière (`45.7547, 4.8422`) sans marqueur central encombrant la carte :
   - Tout clic ou déplacement en dehors de cette zone est bloqué (message « hors zone »), sans affichage de distance.
   - Aucune distance au centre n'est affichée : ni dans le tableau `.md`, ni dans les fiches, ni dans les infobulles, ni dans la barre d'état. Les anneaux de distance (1 km / 2,5 km) ainsi que le bouton associé ont été retirés ; seul le contour de la zone subsiste.
-- **3 modes d'enregistrement** :
-  1. **Automatique** dans le navigateur + dans le bloc `<script id="embedded-markdown">` interne.
-  2. **Export / Liaison du fichier `marqueurs-guillotiere.md`** (compatible avec l'API *File System Access* pour écriture directe sur disque à chaque clic).
-  3. **Bouton « 📦 Exporter HTML tout-en-un »** : génère un nouveau fichier `index.html` contenant à la fois la carte de Lyon hors-ligne ET vos marqueurs `.md` mis à jour.
+- **Sauvegarde dans le navigateur** et dans le bloc Markdown de la page en mémoire. Cela ne modifie pas le fichier HTML sur disque ; utilisez l’export HTML pour créer une copie autonome mise à jour.
+
+## 💾 Sauvegarder et restaurer les données
+
+1. Pour une **sauvegarde automatique .md**, cliquez sur « Activer sauvegarde .md automatique », confirmez puis choisissez un fichier. Le fichier choisi est **remplacé par les données actuellement affichées**, puis actualisé après chaque modification (fiches, couleurs, achats, déplacements ou suppressions). L’état d’enregistrement est visible en bas du panneau.
+2. La liaison ne dure que **le temps de la page** : après un rechargement ou une fermeture, il faut la réactiver. N’écrasez pas une sauvegarde existante que vous souhaitez récupérer : ouvrez-la d’abord avec « Ouvrir .md ».
+3. Si votre navigateur ne propose pas la liaison directe, utilisez « Télécharger .md » après vos modifications. Il crée une copie dans le dossier de téléchargement ; il ne met pas à jour automatiquement un fichier existant. La liaison dépend de la prise en charge de l’API File System Access et des permissions du navigateur, même hors ligne.
+4. Pour **restaurer** une sauvegarde, cliquez sur « Ouvrir .md » et confirmez le remplacement des données actuelles. Si un fichier est lié, il sera également mis à jour avec les données restaurées. Les sauvegardes vides sont acceptées.
+5. En cas d’échec de sauvegarde, un message s’affiche : téléchargez immédiatement une copie et vérifiez les permissions. Gardez régulièrement une copie séparée ; le stockage du navigateur peut être effacé.
+6. « 📦 Exporter HTML tout-en-un » crée un nouveau fichier HTML contenant la carte et les marqueurs à jour ; la liaison au fichier .md n’est pas conservée dans cet export.
+
+Les tests sans dépendance se lancent avec `node tests/color-filter.test.cjs`, `node tests/move-marker.test.cjs` et `node tests/markdown-save.test.cjs`.
 
 ## 📦 Contenu de `marqueurs-guillotiere.md` (mise à jour du 27/10/2026)
 
