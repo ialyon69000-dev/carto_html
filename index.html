@@ -952,6 +952,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .search-result-item:hover { background: var(--accent-soft); color: var(--accent); }
     .search-result-type { font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--bg-subtle); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
 
+    .move-marker-control {
+      position: absolute; bottom: 64px; left: 14px; z-index: 950;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      max-width: calc(100% - 28px); padding: 10px 12px;
+      background: #fff; border: 1px solid var(--accent); border-radius: 10px;
+      box-shadow: var(--shadow-md); font-size: 12px; font-weight: 600;
+    }
+    .move-marker-control[hidden] { display: none; }
+    .move-marker-control span { overflow-wrap: anywhere; }
+
     .map-statusbar {
       position: absolute; bottom: 14px; left: 14px; z-index: 900;
       background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px);
@@ -2642,6 +2652,7 @@ CARTO_GUILLOTIERE_DATA_END -->
         <div class="map-control-group">
           <button type="button" id="btnToggleSidebar" class="map-pill-btn"><span>☰</span><span>Panneau</span></button>
           <button type="button" id="btnRecenter" class="map-pill-btn"><span>🎯</span><span>La Guillotière</span></button>
+          <select id="mapBorderFilter" class="map-select" aria-label="Filtrer les points par couleur de pourtour" title="Filtrer les points par couleur de pourtour"></select>
 
           <div class="offline-search-box">
             <span class="offline-search-icon">🔍</span>
@@ -2661,6 +2672,11 @@ CARTO_GUILLOTIERE_DATA_END -->
       </div>
 
       <div id="map"></div>
+
+      <div class="move-marker-control" id="moveMarkerControl" role="status" hidden>
+        <span id="moveMarkerInstruction"></span>
+        <button type="button" id="btnCancelMove" class="btn btn-outline btn-sm">Annuler</button>
+      </div>
 
       <div class="map-statusbar" id="mapStatusBar">
         <span id="cursorStreet" style="font-weight: 700; color: #93c5fd;">📍 Place Gabriel Péri (Lyon 7e)</span>
@@ -3623,6 +3639,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       let leafletMarkers = new Map();
       let activeCategoryFilter = "all";
       let activeBorderFilter = "all";
+      let movingMarkerId = null;
       let searchQuery = "";
       let editingMarkerId = null;
       let pendingLatLng = null;
@@ -4289,6 +4306,24 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         ];
       }
 
+      // Le filtre ne modifie jamais les données : il masque uniquement les couches sur la carte.
+      function updateMarkerVisibility(markerObj, lfMarker) {
+        const visible = activeBorderFilter === "all" ||
+          getBorderColorById(markerObj.borderColor).id === activeBorderFilter;
+        if (visible && !map.hasLayer(lfMarker)) lfMarker.addTo(map);
+        else if (!visible && map.hasLayer(lfMarker)) {
+          if (movingMarkerId === markerObj.id) cancelMarkerMove();
+          map.removeLayer(lfMarker);
+        }
+      }
+
+      function applyMapBorderFilter() {
+        markersData.forEach((markerObj) => {
+          const lfMarker = leafletMarkers.get(markerObj.id);
+          if (lfMarker) updateMarkerVisibility(markerObj, lfMarker);
+        });
+      }
+
       function addOrUpdateLeafletMarker(markerObj) {
         normalizeMarkerColorState(markerObj);
         const displayLatLng = getMarkerDisplayLatLng(markerObj);
@@ -4297,40 +4332,23 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           existing.setLatLng(displayLatLng);
           existing.setIcon(createPinIcon(markerObj.category, markerObj.borderColor));
           existing.setPopupContent(buildPopupHtml(markerObj));
+          updateMarkerVisibility(markerObj, existing);
           return existing;
         }
 
         const lfMarker = L.marker(displayLatLng, {
           icon: createPinIcon(markerObj.category, markerObj.borderColor),
-          draggable: true
-        }).addTo(map);
+          draggable: false
+        });
 
         lfMarker.bindPopup(buildPopupHtml(markerObj));
-
-        lfMarker.on("dragend", (e) => {
-          const newPos = e.target.getLatLng();
-
-          if (getDistanceFromGuillotiere(newPos.lat, newPos.lng) > MAX_RADIUS_METERS) {
-            pulseCircleOutOfBounds();
-            showToast(
-              "Déplacement refusé : ce point sort de la zone couverte autour de la Guillotière.",
-              "error"
-            );
-            e.target.setLatLng(getMarkerDisplayLatLng(markerObj));
-            return;
-          }
-
-          markerObj.lat = Number(newPos.lat.toFixed(5));
-          markerObj.lng = Number(newPos.lng.toFixed(5));
-          const geo = reverseGeocodeOffline(markerObj.lat, markerObj.lng);
-          markerObj.address = geo.fullAddress;
-          e.target.setPopupContent(buildPopupHtml(markerObj));
-          renderSidebarList();
-          saveAndSyncAll();
-          showToast(`Position mise à jour : ${escapeHtml(geo.fullAddress)}.`, "success");
+        // Sélectionner un autre point abandonne le déplacement en cours.
+        lfMarker.on("click", () => {
+          if (movingMarkerId && movingMarkerId !== markerObj.id) cancelMarkerMove();
         });
 
         leafletMarkers.set(markerObj.id, lfMarker);
+        updateMarkerVisibility(markerObj, lfMarker);
         return lfMarker;
       }
 
@@ -4442,6 +4460,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
               🌐 ${Number(markerObj.lat).toFixed(5)}, ${Number(markerObj.lng).toFixed(5)}
             </div>
             <div class="popup-actions">
+              <button type="button" class="btn btn-outline btn-sm" onclick="window.__cartoStartMarkerMove('${markerObj.id}')">📍 Déplacer</button>
               <button type="button" class="btn btn-outline btn-sm" onclick="window.__cartoEditMarker('${markerObj.id}')">✏️ Modifier</button>
               <button type="button" class="btn btn-danger-outline btn-sm" onclick="window.__cartoDeleteMarker('${markerObj.id}')">🗑️ Supprimer</button>
             </div>
@@ -4621,9 +4640,45 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         );
       };
 
+      function cancelMarkerMove() {
+        movingMarkerId = null;
+        document.getElementById("moveMarkerControl").hidden = true;
+        document.getElementById("moveMarkerInstruction").textContent = "";
+      }
+
+      window.__cartoStartMarkerMove = function (id) {
+        const markerObj = markersData.find((item) => item.id === id);
+        if (!markerObj) return;
+        movingMarkerId = id;
+        document.getElementById("moveMarkerInstruction").textContent =
+          `Déplacement de « ${markerObj.title} » : cliquez sur le nouvel emplacement dans la zone couverte.`;
+        document.getElementById("moveMarkerControl").hidden = false;
+        map.closePopup();
+      };
+
+      document.getElementById("btnCancelMove").addEventListener("click", cancelMarkerMove);
+
+      function moveSelectedMarker(latlng) {
+        const markerObj = markersData.find((item) => item.id === movingMarkerId);
+        if (!markerObj) {
+          cancelMarkerMove();
+          return;
+        }
+        markerObj.lat = Number(latlng.lat.toFixed(5));
+        markerObj.lng = Number(latlng.lng.toFixed(5));
+        const geo = reverseGeocodeOffline(markerObj.lat, markerObj.lng);
+        markerObj.address = geo.fullAddress;
+        cancelMarkerMove();
+        addOrUpdateLeafletMarker(markerObj);
+        renderSidebarList();
+        saveAndSyncAll();
+        showToast(`Position mise à jour : ${escapeHtml(geo.fullAddress)}.`, "success");
+      }
+
       window.__cartoEditMarker = function (id) {
         const m = markersData.find((item) => item.id === id);
         if (!m) return;
+        cancelMarkerMove();
         map.closePopup();
         openMarkerModal({ mode: "edit", marker: m });
       };
@@ -4633,6 +4688,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         if (idx === -1) return;
         const removed = markersData[idx];
         if (activePurchaseMarkerId === id) closePurchaseDialog();
+        if (movingMarkerId === id) cancelMarkerMove();
         markersData.splice(idx, 1);
 
         if (leafletMarkers.has(id)) {
@@ -4694,14 +4750,33 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
 
         container.querySelectorAll(".chip").forEach((btn) => {
           btn.addEventListener("click", () => {
-            activeBorderFilter = btn.getAttribute("data-border");
-            renderBorderFilterChips();
-            renderSidebarList();
+            setBorderFilter(btn.getAttribute("data-border"));
           });
         });
       }
 
+      function setBorderFilter(color) {
+        activeBorderFilter = color;
+        applyMapBorderFilter();
+        renderSidebarList();
+      }
+
+      function renderMapBorderFilter() {
+        const select = document.getElementById("mapBorderFilter");
+        select.innerHTML = `<option value="all">🎨 Toutes les couleurs (${markersData.length})</option>` +
+          BORDER_COLORS.map((color) => {
+            const count = markersData.filter((m) => getBorderColorById(m.borderColor).id === color.id).length;
+            return `<option value="${color.id}">${color.dot} ${escapeHtml(color.label)} (${count})</option>`;
+          }).join("");
+        select.value = activeBorderFilter;
+      }
+
+      document.getElementById("mapBorderFilter").addEventListener("change", (e) => {
+        setBorderFilter(e.target.value);
+      });
+
       function renderSidebarList() {
+        renderMapBorderFilter();
         renderCategoryFilterChips();
         renderBorderFilterChips();
         const listEl = document.getElementById("markersList");
@@ -5048,6 +5123,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       });
 
       map.on("click", (e) => {
+        if (e.originalEvent && typeof e.originalEvent.button === "number" && e.originalEvent.button !== 0) return;
         if (getDistanceFromGuillotiere(e.latlng.lat, e.latlng.lng) > MAX_RADIUS_METERS) {
           pulseCircleOutOfBounds();
           showToast(
@@ -5057,6 +5133,10 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           return;
         }
 
+        if (movingMarkerId) {
+          moveSelectedMarker(e.latlng);
+          return;
+        }
         openMarkerModal({
           mode: "create",
           latlng: e.latlng
@@ -5197,7 +5277,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           };
           markersData.push(newMarker);
           const lf = addOrUpdateLeafletMarker(newMarker);
-          lf.openPopup();
+          if (map.hasLayer(lf)) lf.openPopup();
           showToast(`Marqueur « <strong>${escapeHtml(title)}</strong> » ajouté et enregistré dans le .md !`, "success");
         }
 
@@ -5236,6 +5316,10 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
 
       window.addEventListener("keydown", (e) => {
         if (e.key !== "Escape") return;
+        if (movingMarkerId) {
+          cancelMarkerMove();
+          return;
+        }
         if (document.getElementById("purchaseModal").classList.contains("open")) {
           closePurchaseDialog();
           return;
@@ -5303,6 +5387,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             }
           });
 
+          cancelMarkerMove();
           leafletMarkers.forEach((lf) => map.removeLayer(lf));
           leafletMarkers.clear();
           closePurchaseDialog();
@@ -5342,6 +5427,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         if (!confirm(`Voulez-vous vraiment supprimer les ${markersData.length} marqueur(s) ?`)) {
           return;
         }
+        cancelMarkerMove();
         leafletMarkers.forEach((lf) => map.removeLayer(lf));
         leafletMarkers.clear();
         markersData = [];
@@ -5389,14 +5475,6 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       });
 
       function initApp() {
-        try {
-          localStorage.removeItem("carto_offline_lyon_guillotiere_v9");
-          localStorage.removeItem("carto_offline_lyon_guillotiere_v10");
-          localStorage.removeItem("carto_offline_lyon_guillotiere_v11");
-        } catch (err) {
-          // Anciennes sauvegardes ignorées : la clé v12 recharge les données embarquées nettoyées.
-        }
-
         let mdSource = "";
         try {
           const savedMd = localStorage.getItem(STORAGE_KEY);

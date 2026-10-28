@@ -28,6 +28,8 @@ Application cartographique **totalement autonome (100% hors-ligne)** centrée su
       - 🏦 **Banque / Distributeur** (`banque` — Cyan `#0891b2`)
       - 🍽️ **Restaurant / Café** (`restauration` — Violet `#7c3aed`)
   - **Fichier `.md` directement inclus** dans `index.html` (`<script id="embedded-markdown" type="text/markdown">`) et synchronisé en temps réel.
+- **Déplacement volontaire des points** : cliquez sur un point, puis sur « 📍 Déplacer » dans sa fiche et faites un clic gauche sur le nouvel emplacement (ou touchez la carte). Le glisser-déposer direct est désactivé. « Annuler » ou Échap abandonne l'opération ; un clic hors zone est refusé. L'adresse est recalculée et les autres informations, notamment les achats, sont conservées.
+- **Filtre de couleur directement sur la carte** : le menu « Toutes les couleurs » permet d'afficher les points selon la couleur actuelle de leur pourtour (bleu, rouge, orange, jaune ou vert). Il est synchronisé avec le filtre de couleur du panneau latéral ; les filtres de catégorie et de recherche ne concernent que la liste. Le filtre masque les points sans les supprimer ni modifier leurs achats, et revient à toutes les couleurs au rechargement.
 - **Zone couverte de 5,00 km** autour de la Guillotière (`45.7547, 4.8422`) sans marqueur central encombrant la carte :
   - Tout clic ou déplacement en dehors de cette zone est bloqué (message « hors zone »), sans affichage de distance.
   - Aucune distance au centre n'est affichée : ni dans le tableau `.md`, ni dans les fiches, ni dans les infobulles, ni dans la barre d'état. Les anneaux de distance (1 km / 2,5 km) ainsi que le bouton associé ont été retirés ; seul le contour de la zone subsiste.
