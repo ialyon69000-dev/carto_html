@@ -88,4 +88,68 @@ assert.equal(legacy6.durationWeeks, 6);
 const legacyUnspecified = context.normalizePurchase({ quantity: 'unspecified', startedAt: NOW }, 'jaune');
 assert.equal(legacyUnspecified.durationWeeks, 3, 'sans précision, la carence est de 3 semaines');
 
+// --- Légende de la carte nettoyée + absence de légende dans le formulaire ---
+assert.doesNotMatch(html, /form-hint/, 'La légende du formulaire et son style inutilisé doivent être retirés');
+assert.doesNotMatch(html, /map-legend-dot/, 'La pastille redondante .map-legend-dot doit être retirée');
+assert.doesNotMatch(html, /<div class="map-legend-row">\s*<\/span>/, 'Aucune balise </span> orpheline dans la légende');
+
+const legendStart = html.indexOf('      const LEGEND_COLOR_IDS = [');
+const legendEnd = html.indexOf('      const offlineVectorLayer =');
+assert.ok(legendStart > 0 && legendEnd > legendStart, 'Bloc légende introuvable');
+let toggleClick = null;
+const toggleBtnMock = {
+  attrs: { 'aria-expanded': 'true' },
+  getAttribute(k) { return this.attrs[k]; },
+  setAttribute(k, v) { this.attrs[k] = v; },
+  addEventListener(type, fn) { if (type === 'click') toggleClick = fn; }
+};
+const bodyMock = { hidden: false };
+const iconMock = { textContent: '▾' };
+let renderedLegendHtml = '';
+const legendContext = {
+  getBorderColorById: context.getBorderColorById,
+  escapeHtml: (s) => String(s),
+  map: {},
+  L: {
+    control() {
+      return {
+        addTo() {
+          this.onAdd();
+          return this;
+        }
+      };
+    },
+    DomUtil: {
+      create() {
+        return {
+          set innerHTML(val) { renderedLegendHtml = val; },
+          get innerHTML() { return renderedLegendHtml; },
+          querySelector(sel) {
+            if (sel === '#mapLegendToggle') return toggleBtnMock;
+            if (sel === '#mapLegendBody') return bodyMock;
+            if (sel === '#mapLegendToggleIcon') return iconMock;
+            return null;
+          }
+        };
+      }
+    },
+    DomEvent: { disableClickPropagation() {}, disableScrollPropagation() {} }
+  }
+};
+vm.createContext(legendContext);
+vm.runInContext(html.slice(legendStart, legendEnd), legendContext);
+assert.match(renderedLegendHtml, /🔴 Achat Interdit/);
+assert.match(renderedLegendHtml, /🟠 Achat déconseillé/);
+assert.match(renderedLegendHtml, /🟡 Achat Restreint/);
+assert.match(renderedLegendHtml, /🟢 Achat libre/);
+assert.equal(typeof toggleClick, 'function');
+toggleClick();
+assert.equal(bodyMock.hidden, true);
+assert.equal(iconMock.textContent, '▸');
+assert.equal(toggleBtnMock.getAttribute('aria-expanded'), 'false');
+toggleClick();
+assert.equal(bodyMock.hidden, false);
+assert.equal(iconMock.textContent, '▾');
+assert.equal(toggleBtnMock.getAttribute('aria-expanded'), 'true');
+
 console.log('Achat restreint (Achat / Manque de matériel) : tests réussis.');
