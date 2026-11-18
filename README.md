@@ -14,13 +14,17 @@ Application cartographique **totalement autonome (100% hors-ligne)** centrée su
     - **Réseau TCL** : lignes et stations de **Métro (A, B, C, D)**, **Funiculaires (F1, F2)** et **Tramways (T1 à T6)**.
   - **Icônes à double codage visuel (Pourtour + Centre)** :
     - **Pourtour à 5 couleurs** (visible dans la fiche modale, la fiche latérale et l'infobulle sur la carte) :
-      - 🔵 **Bleu** (`bleu` — `#2563eb`) — couleur par défaut de tous les points, **non sélectionnable manuellement** ;
-      - 🔴 **Rouge** (`rouge` — `#dc2626`) — couleur choisie dans l'interface ;
-      - 🟠 **Orange** (`orange` — `#f97316`) — couleur choisie dans l'interface ;
-      - 🟡 **Jaune** (`jaune` — `#eab308`) — **imposé par l'interface** après validation d'un achat, jamais sélectionné manuellement ;
-      - 🟢 **Vert** (`vert` — `#16a34a`) — couleur choisie dans l'interface.
-    - **Bouton « 🛒 Achat »** sur chaque fiche et infobulle : choix de la tranche achetée (**1 objet**, **2 à 5 objets** ou **6 objets et plus**) puis validation. L'achat est mémorisé sans limite de temps et reste visible après l'échéance. Le 🟡 jaune est proposé pendant **1 semaine**, **3 semaines** ou **6 semaines** respectivement, mais l'utilisateur peut forcer 🔴 rouge, 🟠 orange ou 🟢 vert à tout moment. À l'échéance, la couleur d'origine est restaurée automatiquement, y compris après rechargement ou réimport. « Annuler l'achat » restaure immédiatement la couleur d'origine ; après expiration, « Supprimer l'achat » retire l'historique sans modifier la couleur courante.
-    - ℹ️ « Plus de 6 objets » est traité comme « 6 objets et plus » afin qu'un achat de 6 objets ne soit laissé sans durée.
+      - 🔵 **Non renseigné** (`bleu` — `#2563eb`) — couleur par défaut de tous les points, **non sélectionnable manuellement** ;
+      - 🔴 **Achat Interdit** (`rouge` — `#dc2626`) — choix manuel ;
+      - 🟠 **Achat déconseillé** (`orange` — `#f97316`) — choix manuel ;
+      - 🟡 **Achat Restreint** (`jaune` — `#eab308`) — **sélectionnable** pour deux raisons : « Achat » (carence de 3 semaines) ou « Manque de matériel » (aucune durée de carence) ;
+      - 🟢 **Achat libre** (`vert` — `#16a34a`) — choix manuel.
+    - **Légende affichée sur la carte** (contrôle en bas à gauche, repliable) : 🔴 Achat Interdit · 🟠 Achat déconseillé · 🟡 Achat Restreint · 🟢 Achat libre, avec un rappel des deux raisons du jaune.
+    - **Bouton « 🟡 Achat Restreint »** (sélecteur 🟡, fiche latérale, infobulle et fiche modale) : choix de la raison puis validation. La restriction est mémorisée sans limite de temps et reste visible après l'échéance. Deux raisons sont proposées :
+      - 🛒 **Achat** — carence de **3 semaines** : à l'échéance, la couleur d'origine est restaurée automatiquement, y compris après rechargement ou réimport ;
+      - 🧰 **Manque de matériel** — **aucune durée de carence** : le jaune reste jusqu'à changement manuel.
+      L'utilisateur peut forcer 🔴 Achat Interdit, 🟠 Achat déconseillé ou 🟢 Achat libre à tout moment ; avec « Achat », la couleur d'origine revient à l'échéance. « Annuler la restriction » restaure immédiatement la couleur d'origine ; après expiration, « Supprimer l'historique » retire l'historique sans modifier la couleur courante.
+    - ℹ️ Les anciennes sauvegardes avec tranches de quantité (1 objet / 2 à 5 / 6 et plus) restent relues sans perte : « 1 objet » conserve son ancienne durée d'une semaine, « 6 et plus » six semaines ; toute restriction sans durée précisée passe à 3 semaines.
     - **Centre avec logo du type et couleur dédiée pour chacune des 5 catégories** :
       - 🚬 **Tabac / Presse** (`tabac` — Carmin `#be123c`)
       - 📱 **Magasin de téléphonie** (`telephonie` — Bleu `#2563eb`)
@@ -44,7 +48,7 @@ Application cartographique **totalement autonome (100% hors-ligne)** centrée su
 5. En cas d’échec de sauvegarde, un message s’affiche : téléchargez immédiatement une copie et vérifiez les permissions. Gardez régulièrement une copie séparée ; le stockage du navigateur peut être effacé.
 6. « 📦 Exporter HTML tout-en-un » crée un nouveau fichier HTML contenant la carte et les marqueurs à jour ; la liaison au fichier .md n’est pas conservée dans cet export.
 
-Les tests sans dépendance se lancent avec `node tests/color-filter.test.cjs`, `node tests/move-marker.test.cjs` et `node tests/markdown-save.test.cjs`.
+Les tests sans dépendance se lancent avec `node tests/color-filter.test.cjs`, `node tests/move-marker.test.cjs`, `node tests/markdown-save.test.cjs` et `node tests/achat-restreint.test.cjs`.
 
 ## 📦 Contenu de `marqueurs-guillotiere.md` (mise à jour du 27/10/2026)
 
@@ -56,8 +60,8 @@ Le fichier Markdown — également embarqué dans `index.html` via `<script id="
 - **Source** : OpenStreetMap (licence ODbL), requête Overpass sur les tags `shop=tobacco` et `shop=mobile_phone`, données OSM au **03/08/2026** & comparatif CSV ; Fnac / Darty / Boulanger : adresses et coordonnées vérifiées sur les sites officiels des enseignes (oct. 2026).
 - **Descriptions nettoyées** : les notes/commentaires génériques présents par défaut dans les 173 fiches ont été supprimés. Le champ « Description / Notes » reste disponible pour vos propres observations.
 - **Adresses** : numéro + rue lorsqu'il existe dans OSM, sinon rue la plus proche calculée **hors-ligne** avec le réseau viaire embarqué, puis quartier ou commune.
-- **Pourtour = code couleur à 5 états** (et non de proximité) : les 173 marqueurs sont réglés sur 🔵 **bleu**, la couleur par défaut. Le bleu n'est pas proposé dans les sélecteurs, car il n'est pas sélectionnable manuellement ; 🔴 Rouge, 🟠 Orange et 🟢 Vert se choisissent librement dans l'interface, y compris pendant un achat ; 🟡 Jaune est proposé lorsqu'un achat est validé, puis la couleur d'origine revient à l'expiration.
-- **Achats persistants et expiration** : la tranche validée, la date de début, la durée, la date d'expiration, une éventuelle couleur forcée et la couleur d'origine sont écrites dans le bloc JSON du `.md` et dans le détail du marqueur. L'achat reste visible indéfiniment, y compris après réimport, export, rechargement ou expiration ; une fois la période écoulée, la couleur d'origine est restaurée automatiquement.
+- **Pourtour = code couleur à 5 états** (et non de proximité) : les 173 marqueurs sont réglés sur 🔵 **Non renseigné**, la couleur par défaut. Elle n'est pas proposée dans les sélecteurs, car elle n'est pas sélectionnable manuellement ; 🔴 Achat Interdit, 🟠 Achat déconseillé et 🟢 Achat libre se choisissent librement dans l'interface, y compris pendant une restriction ; 🟡 Achat Restreint se sélectionne avec une raison — « Achat » (carence de 3 semaines) ou « Manque de matériel » (aucune carence) — puis la couleur d'origine revient à l'expiration (pour « Achat » uniquement).
+- **Restrictions persistantes et expiration** : la raison (🛒 Achat ou 🧰 Manque de matériel), la date de début, la durée de carence (3 semaines pour « Achat », aucune pour « Manque de matériel »), la date d'expiration (le cas échéant), une éventuelle couleur forcée et la couleur d'origine sont écrites dans le bloc JSON du `.md` et dans le détail du marqueur. La restriction reste visible indéfiniment, y compris après réimport, export, rechargement ou expiration ; une fois la période écoulée (uniquement pour « Achat »), la couleur d'origine est restaurée automatiquement.
 - **Identifiants** : `osm_n_<id>` pour les nœuds OSM et `osm_way_<id>` pour les bâtiments, ce qui permet de retrouver chaque commerce sur OpenStreetMap ; `manuel_<enseigne>_<magasin>` pour les 6 enseignes Fnac / Darty / Boulanger ajoutées manuellement.
 
 > ℹ️ La clé de stockage local a été incrémentée (`carto_offline_lyon_guillotiere_v12`) afin que la nouvelle liste embarquée — en bleu par défaut, sans descriptions génériques et avec historique d'achat déverrouillé — remplace l'ancienne sauvegarde du navigateur au premier chargement.
