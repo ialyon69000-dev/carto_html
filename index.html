@@ -685,7 +685,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
       --accent-hover: #1d4ed8;
       --accent-soft: #eff6ff;
       --success: #16a34a;
-      --success-soft: #f0fdf4;
       --danger: #dc2626;
       --danger-soft: #fef2f2;
       --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
@@ -748,12 +747,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
       background: rgba(22, 163, 74, 0.22);
       border: 1px solid rgba(74, 222, 128, 0.5);
       color: #86efac;
-    }
-
-    .pill-radius {
-      background: rgba(59, 130, 246, 0.22);
-      border: 1px solid rgba(96, 165, 250, 0.45);
-      color: #93c5fd;
     }
 
     .header-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
@@ -991,8 +984,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .map-legend-toggle-icon { font-size: 11px; line-height: 1; }
     .map-legend-body[hidden] { display: none; }
     .map-legend-title { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 4px 2px 4px; }
-    .map-legend-row { display: flex; align-items: center; gap: 8px; padding: 2.5px 2px; }
-    .map-legend-dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid #ffffff; box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.35); flex: 0 0 auto; }
+    .map-legend-row { display: flex; align-items: center; padding: 2.5px 2px; }
     .map-legend-label { font-weight: 700; font-size: 12px; }
     .map-legend-foot { margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--border); font-size: 10px; color: var(--text-muted); line-height: 1.45; }
 
@@ -1051,8 +1043,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .border-option.automatic { border-style: dashed; }
     .border-option.automatic:hover { background: #fefce8; }
     .border-option.automatic.selected { border-style: solid; }
-    .border-option.locked { opacity: 0.55; cursor: not-allowed; }
-    .border-option .auto-icon { margin-left: auto; font-size: 12px; }
     .border-swatch {
       width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
       border: 2px solid #ffffff; box-shadow: 0 0 0 1px rgba(15,23,42,0.2);
@@ -1062,7 +1052,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
       border: 1px solid var(--border); display: flex; align-items: center;
       justify-content: center; flex-shrink: 0;
     }
-    .form-hint { font-size: 11px; line-height: 1.45; color: var(--text-muted); }
     .modal-purchase-hint {
       margin-top: 7px; padding: 7px 9px; border-radius: 7px;
       background: #fefce8; border: 1px solid #fde68a; color: #854d0e;
@@ -1139,7 +1128,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     .pourtour-pill-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
     .pourtour-pill-btn.active { border-width: 1.5px; }
-    .pourtour-pill-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
     .modal-footer {
       padding: 12px 18px; background: var(--bg-subtle); border-top: 1px solid var(--border);
       display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;
@@ -1159,7 +1147,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .toast.success { border-left-color: var(--success); }
     @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .custom-pin-icon, .center-hub-icon { background: transparent; border: none; }
+    .custom-pin-icon { background: transparent; border: none; }
     .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: var(--shadow-md); padding: 2px; }
     .popup-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--text-main); }
     .popup-cat { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; margin-bottom: 6px; }
@@ -2748,7 +2736,6 @@ CARTO_GUILLOTIERE_DATA_END -->
               <div class="border-color-selector" id="modalBorderColorSelector"></div>
               <div class="modal-pin-preview" id="modalPinPreview" title="Aperçu de l'icône (pourtour + centre)"></div>
             </div>
-            <p class="form-hint">🔵 Non renseigné par défaut (non sélectionnable) · 🔴 Achat Interdit, 🟠 Achat déconseillé et 🟢 Achat libre au choix · 🟡 Achat Restreint : cliquez dessus pour choisir la raison (« Achat » = carence 3 semaines · « Manque de matériel » = aucune carence).</p>
             <div class="modal-purchase-hint" id="modalPurchaseHint" hidden></div>
           </div>
 
@@ -3646,7 +3633,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         const container = L.DomUtil.create("div", "map-legend-control");
         const rows = LEGEND_COLOR_IDS.map((colorId) => {
           const b = getBorderColorById(colorId);
-          return `<div class="map-legend-row"><span class="map-legend-dot" style="background:${b.color};"></span><span class="map-legend-label">${b.dot} ${escapeHtml(b.label)}</span></div>`;
+          return `<div class="map-legend-row"><span class="map-legend-label">${b.dot} ${escapeHtml(b.label)}</span></div>`;
         }).join("");
         container.innerHTML = `
           <button type="button" class="map-legend-toggle" id="mapLegendToggle" aria-expanded="true" title="Afficher / masquer la légende">
@@ -3658,22 +3645,20 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             <div class="map-legend-foot">🟡 « Achat » = carence de 3 semaines<br />« Manque de matériel » = aucune carence</div>
           </div>
         `;
+        const toggleBtn = container.querySelector("#mapLegendToggle");
+        const body = container.querySelector("#mapLegendBody");
+        const icon = container.querySelector("#mapLegendToggleIcon");
+        toggleBtn.addEventListener("click", () => {
+          const expanded = toggleBtn.getAttribute("aria-expanded") === "true";
+          toggleBtn.setAttribute("aria-expanded", String(!expanded));
+          body.hidden = expanded;
+          icon.textContent = expanded ? "▸" : "▾";
+        });
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.disableScrollPropagation(container);
         return container;
       };
       legendControl.addTo(map);
-      const legendToggle = document.getElementById("mapLegendToggle");
-      if (legendToggle) {
-        legendToggle.addEventListener("click", () => {
-          const body = document.getElementById("mapLegendBody");
-          const icon = document.getElementById("mapLegendToggleIcon");
-          const expanded = legendToggle.getAttribute("aria-expanded") === "true";
-          legendToggle.setAttribute("aria-expanded", String(!expanded));
-          if (body) body.hidden = expanded;
-          if (icon) icon.textContent = expanded ? "▸" : "▾";
-        });
-      }
 
       const offlineVectorLayer = new OfflineLyonVectorLayer({
         theme: "light",
@@ -5003,7 +4988,6 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           card.querySelectorAll(".pourtour-pill-btn").forEach((btn) => {
             btn.addEventListener("click", (e) => {
               e.stopPropagation();
-              if (btn.disabled) return;
               if (btn.getAttribute("data-color-action") === "purchase") {
                 openPurchaseDialog(m.id);
               } else {
