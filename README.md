@@ -65,3 +65,11 @@ Le fichier Markdown — également embarqué dans `index.html` via `<script id="
 - **Identifiants** : `osm_n_<id>` pour les nœuds OSM et `osm_way_<id>` pour les bâtiments, ce qui permet de retrouver chaque commerce sur OpenStreetMap ; `manuel_<enseigne>_<magasin>` pour les 6 enseignes Fnac / Darty / Boulanger ajoutées manuellement.
 
 > ℹ️ La clé de stockage local a été incrémentée (`carto_offline_lyon_guillotiere_v12`) afin que la nouvelle liste embarquée — en bleu par défaut, sans descriptions génériques et avec historique d'achat déverrouillé — remplace l'ancienne sauvegarde du navigateur au premier chargement.
+
+## Journal des ouvertures
+
+À chaque chargement de la page, une fenêtre demande un trigramme obligatoire de trois lettres (converti en majuscules). Après validation, une entrée est conservée dans le stockage local du navigateur avec l’heure d’ouverture au format ISO (UTC). Il s’agit d’une identité déclarée, pas d’une authentification.
+
+Le bouton **Exporter et purger le journal .log**, en bas du panneau latéral, demande confirmation puis lance le téléchargement et supprime les entrées locales. Vérifiez que le téléchargement a abouti : le navigateur ne permet pas à la page de confirmer l’enregistrement effectif sur disque. Une annulation de la confirmation ne purge rien.
+
+Le journal est propre au navigateur et à son espace de stockage : il n’est pas partagé entre postes et n’est pas inclus dans les exports HTML ou Markdown. L’effacement des données du navigateur le supprime. Le stockage local doit être autorisé pour valider le trigramme ; son comportement avec un fichier ouvert directement dépend du navigateur.
