@@ -1120,6 +1120,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .fiche-pourtour-btns {
       display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;
     }
+    #sessionDialog { border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 400px; }
+    #sessionDialog::backdrop { background: rgba(15, 23, 42, 0.6); }
+    #sessionDialog .input-field { margin: 12px 0; text-transform: uppercase; }
     .color-choice { display: inline-flex; align-items: center; gap: 3px; }
     .color-help {
       display: inline-flex; align-items: center; justify-content: center;
@@ -2661,6 +2664,7 @@ CARTO_GUILLOTIERE_DATA_END -->
           <span class="sync-dot" id="syncDot"></span>
           <span id="syncStatusText" role="status" aria-live="polite">Sauvegarde .md automatique inactive — téléchargez une copie</span>
         </div>
+        <button type="button" id="btnExportLog" class="btn btn-outline btn-sm">Exporter et purger le journal .log</button>
         <button type="button" id="btnClearAll" class="btn btn-danger-outline btn-sm">Tout effacer</button>
       </div>
     </aside>
@@ -2801,6 +2805,16 @@ CARTO_GUILLOTIERE_DATA_END -->
       </form>
     </div>
   </div>
+
+  <dialog id="sessionDialog" aria-labelledby="sessionTitle">
+    <form id="sessionForm">
+      <h2 id="sessionTitle">Identification</h2>
+      <label for="sessionTrigram">Votre trigramme (3 lettres)</label>
+      <input id="sessionTrigram" class="input-field" required pattern="[A-Za-z]{3}" minlength="3" maxlength="3" autocomplete="off" autofocus>
+      <p>Chaque ouverture est journalisée sur ce navigateur avec la date, l’heure et votre trigramme.</p>
+      <button type="submit" class="btn btn-primary">Valider</button>
+    </form>
+  </dialog>
 
   <div class="toast-container" id="toastContainer"></div>
 
@@ -4307,6 +4321,74 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         return write;
       }
 
+      const SESSION_LOG_KEY = "carto_opening_log_v1";
+
+      function readSessionLog() {
+        const entries = JSON.parse(localStorage.getItem(SESSION_LOG_KEY) || "[]");
+        if (!Array.isArray(entries) || entries.some((entry) =>
+          !entry || typeof entry.date !== "string" || !/^[A-Z]{3}$/.test(entry.trigram))) {
+          throw new Error("Journal invalide");
+        }
+        return entries;
+      }
+
+      function saveSessionOpening(trigram, date) {
+        const entry = { date: date.toISOString(), trigram: trigram.trim().toUpperCase() };
+        if (!/^[A-Z]{3}$/.test(entry.trigram)) throw new Error("Trigramme invalide");
+        const entries = readSessionLog();
+        entries.push(entry);
+        localStorage.setItem(SESSION_LOG_KEY, JSON.stringify(entries));
+      }
+
+      function exportSessionLog() {
+        try {
+          const entries = readSessionLog();
+          if (!entries.length) {
+            showToast("Le journal est vide.", "info");
+            return;
+          }
+          if (!window.confirm("Télécharger le journal puis le purger de ce navigateur ? Vérifiez ensuite que le fichier a bien été enregistré.")) return;
+          const content = entries.map((entry) => `${entry.date} — ${entry.trigram} — Ouverture`).join("\n") + "\n";
+          const url = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "ouvertures-" + new Date().toISOString().replace(/[:.]/g, "-") + ".log";
+          document.body.appendChild(link);
+          try {
+            link.click();
+            localStorage.removeItem(SESSION_LOG_KEY);
+          } finally {
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
+          showToast("Téléchargement du journal lancé et journal purgé. Vérifiez votre dossier de téléchargements.", "info");
+        } catch (error) {
+          console.error("Journal :", error);
+          showToast("Impossible d’exporter ou de purger le journal. Vérifiez le stockage du navigateur.", "error");
+        }
+      }
+
+      function requestSessionTrigram() {
+        const dialog = document.getElementById("sessionDialog");
+        const input = document.getElementById("sessionTrigram");
+        const openedAt = new Date();
+        input.value = "";
+        dialog.addEventListener("cancel", (event) => event.preventDefault());
+        document.getElementById("sessionForm").addEventListener("submit", (event) => {
+          event.preventDefault();
+          const trigram = input.value.trim().toUpperCase();
+          if (!/^[A-Z]{3}$/.test(trigram)) return;
+          try {
+            saveSessionOpening(trigram, openedAt);
+            dialog.close();
+          } catch (error) {
+            console.error("Journal :", error);
+            showToast("Ouverture non enregistrée : stockage du navigateur indisponible ou journal invalide. Autorisez le stockage puis réessayez.", "error");
+          }
+        });
+        dialog.showModal();
+      }
+
       function downloadMarkdownFile() {
         const mdContent = generateMarkdownContent();
         const blob = new Blob([mdContent], { type: "text/markdown;charset=utf-8" });
@@ -5709,7 +5791,9 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         });
       }
 
+      document.getElementById("btnExportLog").addEventListener("click", exportSessionLog);
       initApp();
+      requestSessionTrigram();
     })();
   </script>
 </body>
