@@ -1120,6 +1120,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .fiche-pourtour-btns {
       display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;
     }
+    .color-choice { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+    .color-help { font-weight: 400; font-size: 12px; color: var(--text-main); }
+    .color-help summary {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border: 1px solid var(--border);
+      border-radius: 50%; cursor: pointer; font-weight: 700;
+      background: var(--bg-subtle); list-style: none;
+    }
+    .color-help summary::-webkit-details-marker { display: none; }
+    .color-help summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .color-help-text { display: block; padding: 6px; max-width: 220px; line-height: 1.4; }
     .pourtour-pill-btn {
       border: 1px solid var(--border); background: #ffffff; border-radius: 999px;
       padding: 2px 7px; font-size: 10.5px; font-weight: 700; cursor: pointer;
@@ -4479,6 +4490,21 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         return lfMarker;
       }
 
+      function buildColorHelpHtml(colorId) {
+        const legends = {
+          rouge: "Rouge : Problème avec le commerçant",
+          orange: "Orange : Manque régulier de matériel",
+          jaune: "Jaune : Tout n’est pas disponible",
+          vert: "Vert : Aucun souci"
+        };
+        const legend = legends[colorId];
+        if (!legend) return "";
+        return `<details class="color-help" onclick="event.stopPropagation()">
+          <summary aria-label="${escapeHtml(legend.split(":")[0].trim())} : afficher ou masquer la légende">?</summary>
+          <span class="color-help-text">${escapeHtml(legend)}</span>
+        </details>`;
+      }
+
       function buildBorderButtonsHtml(markerObj, mode) {
         normalizeMarkerColorState(markerObj);
         const border = getBorderColorById(markerObj.borderColor);
@@ -4501,10 +4527,10 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
               ? `Forcer le pourtour en ${b.label} malgré la restriction en cours`
               : `Passer le pourtour en ${b.label}`;
 
-          return `<button type="button" class="pourtour-pill-btn ${isActive ? "active" : ""}" ${actionAttrs} style="${activeStyle}" title="${escapeHtml(title)}">
+          return `<span class="color-choice"><button type="button" class="pourtour-pill-btn ${isActive ? "active" : ""}" ${actionAttrs} style="${activeStyle}" title="${escapeHtml(title)}">
             <span class="dot" style="background:${b.color};"></span>
             <span>${b.automatic ? "Achat Restreint" : escapeHtml(b.label)}</span>
-          </button>`;
+          </button>${buildColorHelpHtml(b.id)}</span>`;
         }).join("");
       }
 
@@ -5136,6 +5162,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           div.innerHTML = `
             <span class="border-swatch" style="background:${b.color};"></span>
             <span>${b.automatic ? "Achat Restreint" : escapeHtml(b.label)}</span>
+            ${buildColorHelpHtml(b.id)}
           `;
 
           if (b.automatic) {
