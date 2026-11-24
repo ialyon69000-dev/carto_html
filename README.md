@@ -55,13 +55,29 @@ Le panneau latéral n’affiche plus que la liste des marqueurs (recherche, filt
 
 ## 💾 Enregistrer les données (fichier HTML = source de vérité)
 
-1. **Enregistrement direct dans `index.html`** : cliquez sur « 🔗 Enregistrer dans index.html » puis désignez **le fichier `index.html` lui-même** (sur un lecteur réseau, sélectionnez le fichier partagé, par exemple `\\serveur\partage\index.html`). À partir de là, chaque modification (fiche, couleur, achat, déplacement, suppression, expiration d’une restriction) est **écrite immédiatement dans le fichier HTML**.
+1. **Enregistrement direct dans `index.html`** : cliquez sur « 🔗 Enregistrer dans index.html » puis **ouvrez le fichier `index.html` existant** (sur un lecteur réseau, sélectionnez le fichier partagé, par exemple `\\serveur\partage\index.html`). À partir de là, chaque modification (fiche, couleur, achat, déplacement, suppression, expiration d’une restriction) est **écrite immédiatement dans le fichier HTML**.
+   > Le fichier est ouvert en **lecture/écriture** (et non avec « Enregistrer sous », qui vidait le fichier dès la sélection). Les versions précédentes utilisaient ce dialogue : c’est ce qui provoquait le message « ce n’est pas la bonne page » suivi d’un `index.html` inutilisable. Les données d’un fichier tronqué peuvent être restaurées depuis une sauvegarde `.md`.
+   > Le fichier lié est mémorisé : au chargement suivant, l’enregistrement direct reprend automatiquement si le navigateur accorde encore la permission (sinon, un simple clic sur le bouton suffit).
 2. Le navigateur demande l’autorisation d’écriture : acceptez-la. Sans autorisation, rien n’est écrit sur le disque et le voyant passe en orange puis en rouge.
+   > Par sécurité, un fichier **vide ou non reconnu** n’est jamais écrasé sans confirmation, et une écriture est annulée si la page reconstituée ne contient pas son bloc de données : le fichier ne peut plus être tronqué.
 3. Si le fichier choisi contient déjà d’autres données que la page affichée, un choix explicite est proposé : **remplacer le fichier** par les données affichées, ou **charger les données du fichier** dans la page. Aucun écrasement silencieux n’est possible.
-4. La liaison ne dure que **le temps de la page** (limite du navigateur) : après un rechargement, réactivez-la en un clic. Le voyant en bas du panneau indique l’état : gris = inactif, bleu = écriture, vert = enregistré, orange = modifications non écrites, rouge = échec.
+4. La liaison est **mémorisée** : au chargement suivant, le navigateur peut la réactiver sans fenêtre (il redemande l’autorisation). Le voyant en bas du panneau indique l’état : gris = inactif, bleu = écriture, vert = enregistré, orange = en attente d’autorisation ou modifications non écrites, rouge = échec.
 5. Sur un lecteur réseau, deux PC doivent éviter de modifier **en même temps** : le dernier enregistrement remplace l’autre (le fichier est relu avant chaque écriture pour ne rien casser d’autre). Pour récupérer une version à jour, rechargez simplement la page (F5).
 6. « Charger un fichier .md » accepte une sauvegarde `.md` **ou** un `index.html` : seul le bloc de données est repris.
 7. « Exporter le fichier .md » produit une **copie externe de secours** dans le dossier de téléchargements ; elle n’est jamais relue automatiquement.
+
+### 🧪 Tests
+
+```bash
+node tests/color-filter.test.cjs
+node tests/color-help.test.cjs
+node tests/move-marker.test.cjs
+node tests/achat-restreint.test.cjs
+node tests/markdown-save.test.cjs
+node tests/html-file-safety.test.cjs
+```
+
+`html-file-safety` vérifie qu’un fichier vide n’est jamais écrasé sans accord, que la page complète (carte, styles, scripts) est toujours réécrite, et qu’aucune écriture tronquée n’est possible.
 
 ## 📦 Contenu du bloc de données (mise à jour du 27/10/2026)
 

@@ -4266,6 +4266,39 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         return { before: text.slice(0, contentStart + 1), after: text.slice(closeIdx) };
       }
 
+      // Vrai si le texte contient bien une page avec son bloc de données complet.
+      function stripEmbeddedMarkdownSafely(htmlText) {
+        const text = String(htmlText || "");
+        return text.indexOf('<script id="embedded-markdown"') >= 0 && text.indexOf("</script") >= 0;
+      }
+
+      // Modèle de page pour (ré)initialiser un fichier : le HTML du disque s'il
+      // est exploitable, sinon la page affichée, sinon le document d'origine
+      // capturé au démarrage. Le résultat contient toujours le bloc de données.
+      function buildTemplateHtmlOnDisk(currentText, mdContent) {
+        const parts = stripEmbeddedMarkdownFromHtml(currentText);
+        if (parts.before !== String(currentText || "") && parts.after) {
+          // Le fichier contient déjà des balises de page exploitables.
+          const rebuilt = buildHtmlDocumentWithData(currentText, mdContent);
+          if (rebuilt.indexOf("</html") > 0 || rebuilt.length > 2000) return rebuilt;
+        }
+        const candidates = [];
+        try { candidates.push(String(window.__cartoPageSourceHtml || "")); } catch (err) { /* ignoré */ }
+        try { candidates.push(String(window.__cartoOriginalHtml || "")); } catch (err) { /* ignoré */ }
+        try { candidates.push(document.documentElement.outerHTML); } catch (err) { /* ignoré */ }
+        for (const candidate of candidates) {
+          if (!candidate) continue;
+          const rebuilt = buildHtmlDocumentWithData(candidate, mdContent);
+          if (rebuilt.indexOf("</html") > 0) return rebuilt;
+        }
+        return buildHtmlDocumentWithData(currentText, mdContent);
+      }
+
+      function containsEmbeddedDataBlock(htmlText) {
+        const md = readMarkdownFromHtmlDocument(htmlText);
+        return md !== null && md.indexOf(DATA_START_MARKER) >= 0 && md.indexOf(DATA_END_MARKER) >= 0;
+      }
+
       function parseHtmlDocumentToMarkers(htmlText) {
         const md = readMarkdownFromHtmlDocument(htmlText);
         if (md === null) return null;
@@ -4285,6 +4318,15 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       // afin d'éviter une perte silencieuse de modifications.
       let writtenSnapshot = null;
       let dirtyWarned = false;
+
+      // Modèle de page : le DOM d'origine capturé avant toute modification,
+      // complété au démarrage par le HTML brut du fichier lui-même (seule
+      // source fiable, y compris pour les scripts inline).
+      try {
+        window.__cartoOriginalHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      } catch (err) {
+        window.__cartoOriginalHtml = "";
+      }
 
       function markDirtyState() {
         const json = JSON.stringify(markersData);
@@ -4345,14 +4387,25 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           try {
             // On relit le fichier pour ne jamais perdre un autre bloc ou une
             // mise à jour faite entre-temps (lecteur réseau partagé). Si le
-            // fichier n'existe pas encore, on part de la page affichée.
+            // fichier est vide ou absent, on part de la page affichée.
             let baseHtml = "";
             try {
               baseHtml = await handle.getFile().then((f) => f.text());
             } catch (readErr) {
+              baseHtml = "";
+            }
+            if (!baseHtml.trim() || !stripEmbeddedMarkdownSafely(baseHtml)) {
               baseHtml = document.documentElement.outerHTML;
             }
             const nextHtml = buildHtmlDocumentWithData(baseHtml, mdContent);
+            // Dernier garde-fou : on n'écrit jamais une page sans son bloc de
+            // données ni une page sensiblement plus courte que l'originale.
+            if (!containsEmbeddedDataBlock(nextHtml)) {
+              throw new Error("Page construite invalide : bloc de données absent, écriture annulée.");
+            }
+            if (nextHtml.length < baseHtml.length * 0.5) {
+              throw new Error("Page construite anormalement courte, écriture annulée.");
+            }
             writable = await handle.createWritable();
             await writable.write(nextHtml);
             await writable.close();
@@ -4380,11 +4433,21 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         return write;
       }
 
+      // IMPORTANT : on ouvre le fichier existant en lecture/écriture
+      // (showOpenFilePicker) et non avec « Enregistrer sous » (showSaveFilePicker),
+      // qui tronque le fichier dès la sélection : c'est ce qui faisait perdre le
+      // contenu de index.html avant même de l'avoir lu.
       async function pickHtmlFileForWriting() {
-        return window.showSaveFilePicker({
-          suggestedName: "index.html",
-          types: [{ description: "Page HTML (index.html)", accept: { "text/html": [".html", ".htm"] } }]
+        if (typeof window.showOpenFilePicker !== "function") return null;
+        const handles = await window.showOpenFilePicker({
+          multiple: false,
+          excludeAcceptAllOption: false,
+          types: [{
+            description: "Page HTML (index.html)",
+            accept: { "text/html": [".html", ".htm"] }
+          }]
         });
+        return handles && handles[0] ? handles[0] : null;
       }
 
       async function readFileHandleText(handle) {
@@ -4396,28 +4459,75 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       // écrites dans index.html lui-même (fonctionne sur un lecteur réseau,
       // y compris avec un chemin UNC \\serveur\partage\index.html).
       async function bindLocalHtmlFile() {
-        if (!("showSaveFilePicker" in window)) {
+        if (!("showOpenFilePicker" in window)) {
           showToast(
-            "Ce navigateur ne permet pas d’enregistrer directement dans un fichier. Ouvrez la page avec Chrome ou Edge pour activer l’enregistrement dans index.html.",
+            "Ce navigateur ne permet pas d’ouvrir un fichier en écriture. Utilisez Chrome ou Edge pour activer l’enregistrement dans index.html.",
             "error"
           );
           return;
         }
         try {
           const handle = await pickHtmlFileForWriting();
-          const currentText = await readFileHandleText(handle);
+          if (!handle) return;
+          let currentText = await readFileHandleText(handle);
 
-          const parsed = parseHtmlDocumentToMarkers(currentText);
-          if (!parsed) {
+          // Un fichier vide (ou non reconnu) ne doit jamais être écrasé en
+          // silence : on demande une confirmation explicite.
+          if (!containsEmbeddedDataBlock(currentText)) {
+            const isEmpty = !currentText.trim();
+            const confirmWrite = window.confirm(
+              isEmpty
+                ? `Le fichier « ${handle.name} » est vide.\n\nÉcrire la page de la carte et les données actuellement affichées dans ce fichier ?`
+                : `Le fichier « ${handle.name} » ne contient pas de bloc de données de la carte.\n\n` +
+                    "• OK : le remplacer par la page et les données actuellement affichées.\n" +
+                    "• Annuler : ne rien écrire (recommandé si ce n’est pas un fichier de la carte)."
+            );
+            if (!confirmWrite) {
+              showToast("Aucune modification n’a été écrite dans le fichier.", "info");
+              return;
+            }
+            // On initialise le fichier avec la page complète affichée (et non le
+            // seul bloc de données), puis on vérifie le résultat.
+            try {
+              const mdForTemplate = generateMarkdownContent();
+              const initialHtml = buildTemplateHtmlOnDisk(currentText, mdForTemplate);
+              // Refus d'écrire une page incomplète : mieux vaut ne rien faire
+              // que laisser un fichier inutilisable.
+              // Une page complète se termine par </html> et n'est pas un fragment ;
+              // le bloc de données doit y figurer.
+              const looksLikeFullPage = initialHtml.indexOf("</html") > 0 && initialHtml.length > 200;
+              if (!looksLikeFullPage || !containsEmbeddedDataBlock(initialHtml)) {
+                showToast(
+                  "La page complète à écrire n’a pas pu être reconstituée : aucune modification n’a été faite dans le fichier. Rouvrez la page puis réessayez.",
+                  "error"
+                );
+                return;
+              }
+              const writable = await handle.createWritable();
+              await writable.write(initialHtml);
+              await writable.close();
+            } catch (writeErr) {
+              console.error("Initialisation du fichier impossible :", writeErr);
+              showToast("Impossible d’écrire dans ce fichier. Aucune donnée n’a été modifiée.", "error");
+              return;
+            }
+            fileHandle = handle;
+            fileHandleLinked = true;
+            dataOrigin = "file";
+            markBindState(handle.name);
+            storeRememberedHandle(handle);
+            writtenSnapshot = JSON.stringify(markersData);
+            setSyncStatus(`Enregistré dans ${handle.name} — ${new Date().toLocaleTimeString("fr-FR")}`, "ok");
             showToast(
-              "Ce fichier ne semble pas être la page de la carte (bloc de données introuvable). Choisissez le fichier <strong>index.html</strong> de l’application.",
-              "error"
+              `Page complète et données écrites dans <strong>${escapeHtml(handle.name)}</strong>. L’enregistrement direct est actif.`,
+              "success"
             );
             return;
           }
 
-          const diskMarkers = parsed.markers;
-          const diskJson = parsed.hasDataBlock ? JSON.stringify(diskMarkers) : null;
+          const parsed = parseHtmlDocumentToMarkers(currentText);
+          const diskMarkers = parsed ? parsed.markers : [];
+          const diskJson = parsed && parsed.hasDataBlock ? JSON.stringify(diskMarkers) : null;
           const memoryJson = JSON.stringify(markersData);
           if (diskJson !== null && diskJson !== memoryJson) {
             const useMemory = window.confirm(
@@ -4429,6 +4539,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
               fileHandle = handle;
               fileHandleLinked = true;
               markBindState(handle.name);
+              storeRememberedHandle(handle);
               applyMarkersFromSource(diskMarkers, "file", `Données chargées depuis <strong>${escapeHtml(handle.name)}</strong>.`);
               setSyncStatus(`Lié à ${handle.name} — les modifications suivantes y seront enregistrées`, "ok");
               return;
@@ -4439,6 +4550,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           fileHandleLinked = true;
           dataOrigin = "file";
           markBindState(handle.name);
+          storeRememberedHandle(handle);
           const saved = await saveAndSyncAll();
           if (saved && fileHandle === handle) {
             showToast(
@@ -4450,10 +4562,122 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           if (err.name !== "AbortError") {
             console.error("Impossible de lier le fichier index.html :", err);
             showToast(
-              "Impossible d’enregistrer dans ce fichier. Vérifiez la permission d’écriture du lecteur réseau puis réessayez.",
+              "Impossible d’enregistrer dans ce fichier (aucune écriture effectuée). Vérifiez la permission d’écriture du lecteur réseau puis réessayez.",
               "error"
             );
           }
+        }
+      }
+
+      // ---- Mémorisation du fichier lié (IndexedDB : les handles ne peuvent
+      // pas être stockés dans localStorage). Permet de retrouver index.html à
+      // la réouverture, sans que les données elles-mêmes quittent le fichier.
+      const HANDLE_DB = "carto_html_handle_v1";
+      const HANDLE_STORE = "handles";
+
+      function openHandleDb() {
+        return new Promise((resolve, reject) => {
+          const idb = window.indexedDB || (typeof indexedDB !== "undefined" ? indexedDB : null);
+          if (!idb) { resolve(null); return; }
+          const request = idb.open(HANDLE_DB, 1);
+          request.onupgradeneeded = () => {
+            if (!request.result.objectStoreNames.contains(HANDLE_STORE)) {
+              request.result.createObjectStore(HANDLE_STORE);
+            }
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function storeRememberedHandle(handle) {
+        try {
+          const db = await openHandleDb();
+          if (!db) return;
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction(HANDLE_STORE, "readwrite");
+            tx.objectStore(HANDLE_STORE).put(handle, "index-html");
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+          });
+          db.close();
+        } catch (err) {
+          console.warn("Mémorisation du fichier lié impossible :", err);
+        }
+      }
+
+      async function readRememberedHandle() {
+        try {
+          const db = await openHandleDb();
+          if (!db) return null;
+          const handle = await new Promise((resolve, reject) => {
+            const tx = db.transaction(HANDLE_STORE, "readonly");
+            const request = tx.objectStore(HANDLE_STORE).get("index-html");
+            request.onsuccess = () => resolve(request.result || null);
+            request.onerror = () => reject(request.error);
+          });
+          db.close();
+          return handle || null;
+        } catch (err) {
+          return null;
+        }
+      }
+
+      async function forgetRememberedHandle() {
+        try {
+          const db = await openHandleDb();
+          if (!db) return;
+          await new Promise((resolve) => {
+            const tx = db.transaction(HANDLE_STORE, "readwrite");
+            tx.objectStore(HANDLE_STORE).delete("index-html");
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => resolve();
+          });
+          db.close();
+        } catch (err) {
+          /* ignoré */
+        }
+      }
+
+      // Re-liaison automatique au chargement : si le fichier a déjà été lié une
+      // fois et que le navigateur accorde encore la permission, l'enregistrement
+      // direct reprend sans aucune fenêtre. Aucune écriture n'a lieu ici : le
+      // fichier est simplement relu pour retrouver son identité.
+      async function attemptAutoRelink() {
+        if (fileHandle) return;
+        if (typeof window.showOpenFilePicker !== "function") return;
+        const stored = await readRememberedHandle();
+        if (!stored) return;
+        try {
+          let permission = "granted";
+          if (typeof stored.queryPermission === "function") {
+            const options = { mode: "readwrite" };
+            permission = await stored.queryPermission(options);
+            if (permission === "prompt") permission = await stored.requestPermission(options);
+          }
+          if (permission !== "granted") {
+            setSyncStatus(
+              "Enregistrement direct en attente d’autorisation — cliquez sur « Enregistrer dans index.html »",
+              "warn"
+            );
+            return;
+          }
+          const text = await readFileHandleText(stored);
+          if (!containsEmbeddedDataBlock(text)) {
+            await forgetRememberedHandle();
+            return;
+          }
+          fileHandle = stored;
+          fileHandleLinked = true;
+          markBindState(stored.name);
+          setSyncStatus(`Lié à ${stored.name} — les modifications sont enregistrées automatiquement`, "ok");
+          showToast(
+            `Enregistrement direct réactivé dans <strong>${escapeHtml(stored.name)}</strong>.`,
+            "success"
+          );
+        } catch (err) {
+          // Silencieux : l'utilisateur peut toujours relier le fichier à la main.
+          console.warn("Réactivation de l’enregistrement impossible :", err);
         }
       }
 
@@ -5742,10 +5966,32 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch (err) { /* ignoré */ }
       }
 
+      // Récupère le HTML brut du fichier en cours d'exécution : c'est le modèle
+      // exact à réutiliser si un fichier vide doit être (ré)initialisé.
+      function capturePageSourceHtml() {
+        if (window.__cartoPageSourceHtml) return;
+        try {
+          const request = new XMLHttpRequest();
+          const href = String(window.location.href || "").split("#")[0].split("?")[0];
+          if (!href) return;
+          request.open("GET", href, false);
+          request.overrideMimeType("text/html");
+          request.send(null);
+          const text = request.responseText || "";
+          if (text.indexOf("embedded-markdown") >= 0) {
+            window.__cartoPageSourceHtml = text;
+          }
+        } catch (err) {
+          // Ouverture directe (file://) ou fichier non lisible : on garde le DOM.
+          console.warn("HTML source non lisible, utilisation du DOM :", err && err.message);
+        }
+      }
+
       function initApp() {
         // Les données proviennent uniquement du fichier HTML : deux PC qui
         // ouvrent le même index.html affichent donc exactement la même chose.
         const mdSource = readEmbeddedMarkdown();
+        capturePageSourceHtml();
         if (mdSource && mdSource.trim()) {
           markersData = parseMarkdownToMarkers(mdSource);
         }
@@ -5766,6 +6012,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         }
 
         offerLegacyMigration();
+        attemptAutoRelink();
 
         setInterval(() => checkPurchaseExpirations(), 30 * 1000);
         window.addEventListener("focus", () => checkPurchaseExpirations());
