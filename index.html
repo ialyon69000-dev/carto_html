@@ -782,18 +782,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     aside.sidebar.collapsed { margin-left: -395px; }
 
-    .sidebar-tabs {
-      display: grid; grid-template-columns: 1fr 1fr;
+    .sidebar-heading {
+      display: flex; align-items: center; justify-content: space-between;
       border-bottom: 1px solid var(--border); background: var(--bg-subtle);
-      padding: 6px; gap: 6px;
+      padding: 10px 14px; font-size: 12.5px; font-weight: 700; color: var(--text-main);
     }
-
-    .tab-btn {
-      padding: 8px 10px; border-radius: 7px; border: none; background: transparent;
-      color: var(--text-muted); font-size: 12.5px; font-weight: 600; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;
-    }
-    .tab-btn.active { background: #ffffff; color: var(--accent); box-shadow: var(--shadow-sm); }
 
     .tab-badge {
       background: var(--accent-soft); color: var(--accent); font-size: 11px;
@@ -876,15 +869,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     .icon-btn:hover { background: var(--bg-hover); color: var(--text-main); border-color: var(--border); }
     .icon-btn.delete:hover { background: var(--danger-soft); color: var(--danger); border-color: #fecaca; }
-
-    .md-preview-container { flex: 1; display: flex; flex-direction: column; padding: 12px 14px; gap: 10px; min-height: 0; }
-    .md-preview-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-    .md-textarea {
-      flex: 1; width: 100%; resize: none;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 11.5px; line-height: 1.5; padding: 12px; border-radius: 8px;
-      border: 1px solid var(--border); background: #0f172a; color: #e2e8f0; outline: none;
-    }
 
     .sidebar-footer {
       padding: 9px 14px; border-top: 1px solid var(--border); background: var(--bg-subtle);
@@ -1124,9 +1108,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .fiche-pourtour-btns {
       display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;
     }
-    #sessionDialog { border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 400px; }
-    #sessionDialog::backdrop { background: rgba(15, 23, 42, 0.6); }
-    #sessionDialog .input-field { margin: 12px 0; text-transform: uppercase; }
     .color-choice { display: inline-flex; align-items: center; gap: 3px; }
     .color-help {
       display: inline-flex; align-items: center; justify-content: center;
@@ -2606,23 +2587,18 @@ CARTO_GUILLOTIERE_DATA_END -->
     <div class="header-actions">
       <button type="button" id="btnBindFile" class="btn btn-emerald" title="Choisir ce fichier index.html pour y enregistrer directement toutes les modifications (y compris sur un lecteur réseau)">
         <span>🔗</span>
-        <span id="bindFileLabel">Activer l’enregistrement dans index.html</span>
+        <span id="bindFileLabel">Enregistrer dans index.html</span>
       </button>
 
-      <label for="fileImportInput" class="btn btn-ghost-dark" title="Charger les marqueurs depuis un fichier index.html ou une sauvegarde .md">
+      <label for="fileImportInput" class="btn btn-ghost-dark" title="Charger les marqueurs depuis un fichier .md ou un index.html">
         <span>📂</span>
-        <span>Ouvrir un fichier</span>
+        <span>Charger un fichier .md</span>
       </label>
-      <input type="file" id="fileImportInput" accept=".html,.htm,.md,.markdown,.txt" style="display: none;" />
+      <input type="file" id="fileImportInput" accept=".md,.markdown,.txt,.html,.htm" style="display: none;" />
 
-      <button type="button" id="btnExportMd" class="btn btn-outline" title="Sauvegarde externe facultative au format Markdown">
+      <button type="button" id="btnExportMd" class="btn btn-ghost-dark" title="Exporter la base au format Markdown (.md)">
         <span>💾</span>
-        <span>Sauvegarde .md (<span id="exportCount">0</span>)</span>
-      </button>
-
-      <button type="button" id="btnExportStandaloneHtml" class="btn btn-primary" title="Télécharger une copie de index.html contenant la carte et toutes vos données (si vous n’avez pas activé l’enregistrement direct)">
-        <span>📦</span>
-        <span>Télécharger index.html</span>
+        <span>Exporter le fichier .md</span>
       </button>
     </div>
   </header>
@@ -2631,14 +2607,9 @@ CARTO_GUILLOTIERE_DATA_END -->
   <div class="workspace">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-tabs">
-        <button type="button" class="tab-btn active" data-tab="list">
-          <span>📌 Marqueurs</span>
-          <span class="tab-badge" id="markerCountBadge">0</span>
-        </button>
-        <button type="button" class="tab-btn" data-tab="markdown">
-          <span>💾 Sauvegarde .md</span>
-        </button>
+      <div class="sidebar-heading">
+        <span>📌 Marqueurs</span>
+        <span class="tab-badge" id="markerCountBadge">0</span>
       </div>
 
       <div class="tab-panel active" id="tab-list">
@@ -2650,25 +2621,11 @@ CARTO_GUILLOTIERE_DATA_END -->
         <div class="markers-list" id="markersList"></div>
       </div>
 
-      <div class="tab-panel" id="tab-markdown">
-        <div class="md-preview-container">
-          <div class="md-preview-toolbar">
-            <span style="font-size: 12px; font-weight: 700; color: var(--text-main);">Sauvegarde externe .md (facultative)</span>
-            <div style="display: flex; gap: 6px;">
-              <button type="button" id="btnCopyMd" class="btn btn-outline btn-sm">📋 Copier</button>
-              <button type="button" id="btnDownloadMdFromTab" class="btn btn-primary btn-sm">💾 Télécharger .md</button>
-            </div>
-          </div>
-          <textarea id="mdLiveOutput" class="md-textarea" readonly spellcheck="false"></textarea>
-        </div>
-      </div>
-
       <div class="sidebar-footer">
         <div class="sync-indicator">
           <span class="sync-dot idle" id="syncDot"></span>
           <span id="syncStatusText" role="status" aria-live="polite">Enregistrement dans index.html inactif — données lues depuis le fichier HTML</span>
         </div>
-        <button type="button" id="btnExportLog" class="btn btn-outline btn-sm">Exporter et purger le journal .log</button>
         <button type="button" id="btnClearAll" class="btn btn-danger-outline btn-sm">Tout effacer</button>
       </div>
     </aside>
@@ -2809,16 +2766,6 @@ CARTO_GUILLOTIERE_DATA_END -->
       </form>
     </div>
   </div>
-
-  <dialog id="sessionDialog" aria-labelledby="sessionTitle">
-    <form id="sessionForm">
-      <h2 id="sessionTitle">Identification</h2>
-      <label for="sessionTrigram">Votre trigramme (3 lettres)</label>
-      <input id="sessionTrigram" class="input-field" required pattern="[A-Za-z]{3}" minlength="3" maxlength="3" autocomplete="off" autofocus>
-      <p>Chaque ouverture est journalisée sur ce navigateur avec la date, l’heure et votre trigramme.</p>
-      <button type="submit" class="btn btn-primary">Valider</button>
-    </form>
-  </dialog>
 
   <div class="toast-container" id="toastContainer"></div>
 
@@ -4369,9 +4316,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         // Le bloc embarqué reflète toujours l'état affiché, sans écriture disque.
         if (embeddedMdEl) embeddedMdEl.textContent = "\n" + mdContent + "\n  ";
 
-        document.getElementById("mdLiveOutput").value = mdContent;
         document.getElementById("markerCountBadge").textContent = markersData.length;
-        document.getElementById("exportCount").textContent = markersData.length;
 
         markDirtyState();
 
@@ -4422,9 +4367,9 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             }
             console.error("Erreur d’écriture dans le fichier HTML lié :", err);
             if (fileHandle === handle) {
-              setSyncStatus(`Échec d’enregistrement dans ${handle.name} — utilisez « Télécharger index.html »`, "error");
+              setSyncStatus(`Échec d’enregistrement dans ${handle.name} — vérifiez la permission d’écriture`, "error");
               showToast(
-                "Impossible d’écrire dans le fichier index.html. Autorisez la permission d’écriture, ou utilisez « Télécharger index.html ».",
+                "Impossible d’écrire dans le fichier index.html. Autorisez la permission d’écriture du fichier puis réessayez.",
                 "error"
               );
             }
@@ -4453,10 +4398,9 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       async function bindLocalHtmlFile() {
         if (!("showSaveFilePicker" in window)) {
           showToast(
-            "Ce navigateur ne permet pas d’enregistrer directement dans le fichier. Utilisez « Télécharger index.html » puis remplacez le fichier sur le lecteur réseau.",
-            "info"
+            "Ce navigateur ne permet pas d’enregistrer directement dans un fichier. Ouvrez la page avec Chrome ou Edge pour activer l’enregistrement dans index.html.",
+            "error"
           );
-          downloadStandaloneHtml();
           return;
         }
         try {
@@ -4506,7 +4450,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           if (err.name !== "AbortError") {
             console.error("Impossible de lier le fichier index.html :", err);
             showToast(
-              "Impossible d’enregistrer dans ce fichier. Vérifiez la permission d’écriture du lecteur réseau, ou utilisez « Télécharger index.html ».",
+              "Impossible d’enregistrer dans ce fichier. Vérifiez la permission d’écriture du lecteur réseau puis réessayez.",
               "error"
             );
           }
@@ -4555,107 +4499,6 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showToast("Sauvegarde externe <strong>marqueurs-guillotiere.md</strong> téléchargée.", "info");
-      }
-
-      function downloadStandaloneHtml() {
-        const mdContent = generateMarkdownContent();
-        // On sérialise une copie propre de la page (sans infobulles, toasts ni
-        // état de carte) pour que le fichier téléchargé soit directement réutilisable.
-        const clone = document.documentElement.cloneNode(true);
-        const mapEl = clone.querySelector("#map");
-        if (mapEl) { mapEl.innerHTML = ""; mapEl.removeAttribute("style"); mapEl.removeAttribute("class"); }
-        const toastEl = clone.querySelector("#toastContainer");
-        if (toastEl) toastEl.innerHTML = "";
-        clone.querySelectorAll(".modal-backdrop.open, dialog[open]").forEach((el) => {
-          el.classList.remove("open");
-          el.removeAttribute("open");
-        });
-        const bindBtn = clone.querySelector("#btnBindFile");
-        if (bindBtn) bindBtn.classList.remove("active-sync");
-        const bindLabel = clone.querySelector("#bindFileLabel");
-        if (bindLabel) bindLabel.textContent = "Activer l’enregistrement dans index.html";
-        const currentHtml = buildHtmlDocumentWithData(clone.outerHTML, mdContent);
-        const blob = new Blob([currentHtml], { type: "text/html;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "index.html";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast(
-          `<strong>index.html</strong> téléchargé avec les ${markersData.length} marqueur(s) intégrés. Remplacez le fichier du lecteur réseau par celui-ci.`,
-          "success"
-        );
-      }
-
-      const SESSION_LOG_KEY = "carto_opening_log_v1";
-
-      function readSessionLog() {
-        const entries = JSON.parse(localStorage.getItem(SESSION_LOG_KEY) || "[]");
-        if (!Array.isArray(entries) || entries.some((entry) =>
-          !entry || typeof entry.date !== "string" || !/^[A-Z]{3}$/.test(entry.trigram))) {
-          throw new Error("Journal invalide");
-        }
-        return entries;
-      }
-
-      function saveSessionOpening(trigram, date) {
-        const entry = { date: date.toISOString(), trigram: trigram.trim().toUpperCase() };
-        if (!/^[A-Z]{3}$/.test(entry.trigram)) throw new Error("Trigramme invalide");
-        const entries = readSessionLog();
-        entries.push(entry);
-        localStorage.setItem(SESSION_LOG_KEY, JSON.stringify(entries));
-      }
-
-      function exportSessionLog() {
-        try {
-          const entries = readSessionLog();
-          if (!entries.length) {
-            showToast("Le journal est vide.", "info");
-            return;
-          }
-          if (!window.confirm("Télécharger le journal puis le purger de ce navigateur ? Vérifiez ensuite que le fichier a bien été enregistré.")) return;
-          const content = entries.map((entry) => `${entry.date} — ${entry.trigram} — Ouverture`).join("\n") + "\n";
-          const url = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "ouvertures-" + new Date().toISOString().replace(/[:.]/g, "-") + ".log";
-          document.body.appendChild(link);
-          try {
-            link.click();
-            localStorage.removeItem(SESSION_LOG_KEY);
-          } finally {
-            link.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-          }
-          showToast("Téléchargement du journal lancé et journal purgé. Vérifiez votre dossier de téléchargements.", "info");
-        } catch (error) {
-          console.error("Journal :", error);
-          showToast("Impossible d’exporter ou de purger le journal. Vérifiez le stockage du navigateur.", "error");
-        }
-      }
-
-      function requestSessionTrigram() {
-        const dialog = document.getElementById("sessionDialog");
-        const input = document.getElementById("sessionTrigram");
-        const openedAt = new Date();
-        input.value = "";
-        dialog.addEventListener("cancel", (event) => event.preventDefault());
-        document.getElementById("sessionForm").addEventListener("submit", (event) => {
-          event.preventDefault();
-          const trigram = input.value.trim().toUpperCase();
-          if (!/^[A-Z]{3}$/.test(trigram)) return;
-          try {
-            saveSessionOpening(trigram, openedAt);
-            dialog.close();
-          } catch (error) {
-            console.error("Journal :", error);
-            showToast("Ouverture non enregistrée : stockage du navigateur indisponible ou journal invalide. Autorisez le stockage puis réessayez.", "error");
-          }
-        });
-        dialog.showModal();
       }
 
       function getMarkerDisplayLatLng(markerObj) {
@@ -5726,38 +5569,13 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         }
       });
 
-      document.querySelectorAll(".tab-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-          document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
-          btn.classList.add("active");
-          const tabId = btn.getAttribute("data-tab");
-          document.getElementById(`tab-${tabId}`).classList.add("active");
-        });
-      });
-
       document.getElementById("searchInput").addEventListener("input", (e) => {
         searchQuery = e.target.value;
         renderSidebarList();
       });
 
       document.getElementById("btnExportMd").addEventListener("click", downloadMarkdownFile);
-      document.getElementById("btnDownloadMdFromTab").addEventListener("click", downloadMarkdownFile);
-      document.getElementById("btnExportStandaloneHtml").addEventListener("click", downloadStandaloneHtml);
       document.getElementById("btnBindFile").addEventListener("click", bindLocalHtmlFile);
-
-      document.getElementById("btnCopyMd").addEventListener("click", async () => {
-        const mdText = generateMarkdownContent();
-        try {
-          await navigator.clipboard.writeText(mdText);
-          showToast("Contenu Markdown (.md) copié dans le presse-papiers !", "success");
-        } catch {
-          const textarea = document.getElementById("mdLiveOutput");
-          textarea.select();
-          document.execCommand("copy");
-          showToast("Contenu Markdown (.md) copié !", "success");
-        }
-      });
 
       // Ouverture d'un fichier : index.html (source de vérité, avec sa carte)
       // ou sauvegarde externe .md. Seul le bloc de données est repris.
@@ -5956,9 +5774,9 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         });
       }
 
-      document.getElementById("btnExportLog").addEventListener("click", exportSessionLog);
+      // Ouverture directe : la base est chargée depuis index.html, sans aucune
+      // fenêtre d'identification ni journalisation.
       initApp();
-      requestSessionTrigram();
     })();
   </script>
 </body>
