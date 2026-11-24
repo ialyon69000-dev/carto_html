@@ -852,6 +852,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .marker-card-cat { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
     .marker-card-addr { font-size: 11.5px; color: #2563eb; font-weight: 600; margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
     .marker-card-desc { font-size: 12px; color: #475569; margin-bottom: 8px; line-height: 1.45; white-space: pre-line; word-break: break-word; }
+    .marker-card-field { margin-bottom: 6px; }
+    .marker-card-field .field-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); }
+    .marker-card-field .field-value { font-size: 11.5px; color: #334155; white-space: pre-line; word-break: break-word; }
+    .marker-card-field .field-value.empty { color: var(--text-muted); font-style: italic; }
     .marker-card-meta {
       display: flex; align-items: center; justify-content: space-between;
       font-size: 11px; color: var(--text-muted); border-top: 1px solid #f1f5f9;
@@ -1147,6 +1151,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .popup-cat { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; margin-bottom: 6px; }
     .popup-addr { font-size: 11.5px; color: #2563eb; font-weight: 600; margin-bottom: 5px; }
     .popup-desc { font-size: 12px; color: #475569; margin-bottom: 8px; line-height: 1.4; white-space: pre-line; }
+    .popup-field { margin-bottom: 7px; }
+    .popup-field-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); margin-bottom: 2px; }
+    .popup-field-value {
+      font-size: 12px; color: #334155; line-height: 1.45; white-space: pre-line;
+      background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 4px 7px;
+      max-height: 120px; overflow-y: auto; overflow-wrap: anywhere;
+    }
+    .popup-field-value.empty { color: var(--text-muted); font-style: italic; }
     .popup-meta { font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 6px; margin-bottom: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .popup-actions { display: flex; gap: 6px; }
 
@@ -5010,9 +5022,17 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         const addrHtml = markerObj.address
           ? `<div class="popup-addr">📍 ${escapeHtml(markerObj.address)}</div>`
           : "";
-        const descHtml = markerObj.description
-          ? `<div class="popup-desc"><strong>Date / Matériel acheté / Acheteur</strong><br>${escapeHtml(markerObj.description)}</div>`
-          : "";
+        // Ces deux zones sont toujours affichées, avec le texte associé ; un
+        // texte vide est signalé explicitement plutôt que masqué.
+        const fieldHtml = (label, value) => {
+          const text = String(value || "").trim();
+          return `<div class="popup-field">
+              <div class="popup-field-label">${escapeHtml(label)}</div>
+              <div class="popup-field-value${text ? "" : " empty"}">${text ? escapeHtml(text) : "Non renseigné"}</div>
+            </div>`;
+        };
+        const descHtml = fieldHtml("Date / Matériel acheté / Acheteur", markerObj.description);
+        const commentsHtml = fieldHtml("Commentaires", markerObj.comments);
         const pourtourButtonsHtml = buildBorderButtonsHtml(markerObj, "popup");
         const purchaseBarHtml = buildPurchaseBarHtml(markerObj, "popup");
 
@@ -5035,7 +5055,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             ${purchaseBarHtml}
             ${addrHtml}
             ${descHtml}
-            ${markerObj.comments ? `<div class="popup-desc"><strong>Commentaires</strong><br>${escapeHtml(markerObj.comments)}</div>` : ""}
+            ${commentsHtml}
             <div class="popup-meta">
               🌐 ${Number(markerObj.lat).toFixed(5)}, ${Number(markerObj.lng).toFixed(5)}
             </div>
@@ -5336,6 +5356,15 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         setBorderFilter(e.target.value);
       });
 
+      // Zone de fiche toujours affichée : libellé + texte associé.
+      function buildCardFieldHtml(label, value) {
+        const text = String(value || "").trim();
+        return `<div class="marker-card-field">
+            <div class="field-label">${escapeHtml(label)}</div>
+            <div class="field-value${text ? "" : " empty"}">${text ? escapeHtml(text) : "Non renseigné"}</div>
+          </div>`;
+      }
+
       function renderSidebarList() {
         renderMapBorderFilter();
         renderCategoryFilterChips();
@@ -5400,8 +5429,8 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             </div>
             ${purchaseBarHtml}
             ${m.address ? `<div class="marker-card-addr">📍 ${escapeHtml(m.address)}</div>` : ""}
-            ${m.description ? `<div class="marker-card-desc"><strong>Date / Matériel acheté / Acheteur</strong><br>${escapeHtml(m.description)}</div>` : ""}
-            ${m.comments ? `<div class="marker-card-desc"><strong>Commentaires</strong><br>${escapeHtml(m.comments)}</div>` : ""}
+            ${buildCardFieldHtml("Date / Matériel acheté / Acheteur", m.description)}
+            ${buildCardFieldHtml("Commentaires", m.comments)}
             <div class="marker-card-meta">
               <div>
                 <span class="coord-mono">${Number(m.lat).toFixed(5)}, ${Number(m.lng).toFixed(5)}</span>
