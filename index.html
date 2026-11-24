@@ -3890,6 +3890,10 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       let tempPreviewMarker = null;
       let selectedCategoryInModal = CATEGORIES[0].id;
       let selectedBorderColorInModal = DEFAULT_BORDER_COLOR;
+      // Couleur choisie dans la modale AVANT une éventuelle restriction : c'est
+      // elle qui redevient visible à la fin de la restriction. Tans qu'une
+      // restriction est en cours, le pourtour affiché reste le jaune.
+      let selectedBaseBorderColorInModal = DEFAULT_BORDER_COLOR;
       let activePurchaseMarkerId = null;
       let fileHandle = null;
       let fileWriteQueue = Promise.resolve();
@@ -4039,7 +4043,8 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         const currentBorder = getBorderColorById(markerObj.borderColor).id;
         markerObj.borderColor = currentBorder;
 
-        // Restriction déjà échue : la couleur d'origine revient aussitôt.
+        // Fin de la période (ou jaune hérité d'une restriction échue) : la
+        // couleur d'origine revient aussitôt, sans laisser de trace.
         if (markerObj.purchase && typeof markerObj.purchase === "object") {
           const raw = markerObj.purchase;
           const rawReason = getRestrictionReasonById(raw.reason || "achat");
@@ -4050,6 +4055,11 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             markerObj.borderColor = getSafeManualBorderColor(raw.previousBorderColor || DEFAULT_BORDER_COLOR);
             return markerObj;
           }
+        } else if (!markerObj.purchase && currentBorder === PURCHASE_BORDER_COLOR) {
+          // Jaune sans restriction connue (ancienne donnée) : on ne peut pas
+          // retrouver la couleur d'origine, le jaune reste affiché.
+          markerObj.borderColor = PURCHASE_BORDER_COLOR;
+          return markerObj;
         }
 
         markerObj.purchase = normalizePurchase(markerObj.purchase, currentBorder);
@@ -5043,7 +5053,10 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         if (!modal || !modal.classList.contains("open") || editingMarkerId !== id) return;
         const m = markersData.find((item) => item.id === id);
         if (!m) return;
-        selectedBorderColorInModal = getSafeManualBorderColor(m.borderColor);
+        selectedBaseBorderColorInModal = getSafeManualBorderColor(
+          m.purchase ? m.purchase.previousBorderColor || DEFAULT_BORDER_COLOR : m.borderColor
+        );
+        selectedBorderColorInModal = selectedBaseBorderColorInModal;
         renderModalBorderColors();
         updateModalPinPreview();
       }
@@ -5549,13 +5562,18 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           if (b.automatic) {
             div.addEventListener("click", () => {
               if (editingMarkerId) {
-                openPurchaseDialog(editingMarkerId);
+                // Le jaune doit apparaître immédiatement sur la carte : on
+                // enregistre la restriction, puis on rouvre la fiche à l'identique.
+                const keepEditing = editingMarkerId;
+                closeMarkerModal();
+                openPurchaseDialog(keepEditing);
               } else {
                 showToast("Enregistrez d’abord le marqueur, puis utilisez le bouton 🟡 Achat Restreint pour choisir la raison (Achat ou Manque de matériel).", "info");
               }
             });
           } else {
             div.addEventListener("click", () => {
+              selectedBaseBorderColorInModal = b.id;
               selectedBorderColorInModal = b.id;
               renderModalBorderColors();
               updateModalPinPreview();
@@ -5585,11 +5603,17 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           inputDesc.value = marker.description || "";
           document.getElementById("inputMarkerComments").value = marker.comments || "";
           selectedCategoryInModal = getCategoryById(marker.category).id;
-          selectedBorderColorInModal = getSafeManualBorderColor(marker.borderColor);
+          // Pendant une restriction, la couleur de retour est celle d'avant
+          // l'achat (le jaune affiché n'est qu'un état temporaire).
+          selectedBaseBorderColorInModal = marker.purchase
+            ? getSafeManualBorderColor(marker.purchase.previousBorderColor || DEFAULT_BORDER_COLOR)
+            : getSafeManualBorderColor(marker.borderColor);
+          selectedBorderColorInModal = selectedBaseBorderColorInModal;
           coordsText.textContent = `${Number(marker.lat).toFixed(5)}, ${Number(marker.lng).toFixed(5)}`;
           stationText.textContent = geo.stationInfo;
         } else {
           editingMarkerId = null;
+          selectedBaseBorderColorInModal = DEFAULT_BORDER_COLOR;
           selectedBorderColorInModal = DEFAULT_BORDER_COLOR;
           const lat = Number(latlng.lat.toFixed(5));
           const lng = Number(latlng.lng.toFixed(5));
@@ -5796,13 +5820,19 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             existing.description = description;
             existing.comments = comments;
             existing.category = selectedCategoryInModal;
-            if (existing.purchase && manualBorderColor !== PURCHASE_BORDER_COLOR) {
-              existing.purchase.forcedColor = manualBorderColor;
+            if (existing.purchase) {
+              // Restriction en cours : le pourtour reste jaune, la couleur
+              // choisie devient celle qui reviendra à la date de fin.
+              normalizeMarkerColorState(existing);
+              existing.purchase.forcedColor = null;
+              existing.purchase.previousBorderColor = manualBorderColor;
+              existing.borderColor = PURCHASE_BORDER_COLOR;
+            } else {
+              existing.borderColor = manualBorderColor;
             }
-            existing.borderColor = manualBorderColor;
             normalizeMarkerColorState(existing);
             addOrUpdateLeafletMarker(existing);
-            const purchaseNote = existing.purchase ? " La date de fin de la restriction est conservée ; la couleur choisie est appliquée." : "";
+            const purchaseNote = existing.purchase ? " Le pourtour reste jaune (restriction en cours) ; la couleur choisie reviendra à la date de fin." : "";
             showToast(`Marqueur « <strong>${escapeHtml(title)}</strong> » mis à jour.${purchaseNote}${fileHandleLinked ? "" : " Activez l’enregistrement dans index.html pour l’écrire dans le fichier."}`, "success");
           }
         } else if (pendingLatLng) {

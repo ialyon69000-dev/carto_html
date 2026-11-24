@@ -115,6 +115,39 @@ const manqueBar = barContext.buildPurchaseBarHtml({ id: 'x', title: 'Test', purc
 assert.match(manqueBar, /Sans date de fin/);
 assert.doesNotMatch(manqueBar, /historique/i);
 
+// --- Le jaune s'applique dès l'achat et la couleur d'origine revient à la fin ---
+const applied = { borderColor: 'vert', purchase: null };
+const view = context.normalizeMarkerColorState({
+  borderColor: 'vert',
+  purchase: { reason: 'achat', endedAt: NOW + 3 * WEEK_MS, previousBorderColor: 'vert', forcedColor: null }
+});
+assert.equal(view.borderColor, 'jaune', 'un achat en cours force le pourtour jaune');
+const ended = { borderColor: 'jaune', purchase: { reason: 'achat', endedAt: NOW - 1000, previousBorderColor: 'vert', forcedColor: null } };
+context.normalizeMarkerColorState(ended);
+assert.equal(ended.borderColor, 'vert', 'à la fin de la période, la couleur d’origine revient');
+assert.equal(ended.purchase, null, 'la restriction est oubliée à la fin de la période');
+
+// Une couleur choisie pendant la restriction ne doit jamais casser le jaune :
+// la restriction prime, la couleur choisie est celle qui reviendra à la fin.
+const withBase = context.normalizeMarkerColorState({
+  borderColor: 'bleu',
+  purchase: { reason: 'achat', endedAt: NOW + WEEK_MS, previousBorderColor: 'bleu', forcedColor: null }
+});
+assert.equal(withBase.borderColor, 'jaune', 'enregistrer une couleur pendant la restriction ne retire pas le jaune');
+
+// --- L'interface ne doit plus réécrire la couleur par-dessus une restriction ---
+// (régression : « Modifier la fiche » + Enregistrer remettait la couleur d'origine)
+const formSubmit = html.slice(html.indexOf('document.getElementById("markerForm").addEventListener("submit"'), html.indexOf('document.getElementById("btnCloseModal")'));
+assert.match(formSubmit, /if \(existing\.purchase\)/, 'la validation de fiche doit traiter le cas d’une restriction en cours');
+assert.match(formSubmit, /existing\.purchase\.previousBorderColor = manualBorderColor/);
+assert.match(formSubmit, /existing\.purchase\.forcedColor = null/);
+assert.doesNotMatch(formSubmit, /existing\.borderColor = manualBorderColor;\s*\n\s*normalizeMarkerColorState\(existing\);/,
+  'la couleur choisie ne doit pas écraser le jaune pendant une restriction');
+
+// La pastille « Achat Restreint » de la fiche latérale applique le jaune tout de suite
+assert.match(html, /const keepEditing = editingMarkerId;\s*\n\s*closeMarkerModal\(\);\s*\n\s*openPurchaseDialog\(keepEditing\);/,
+  'depuis la modale d’édition, l’achat doit être enregistré (jaune immédiat)');
+
 // --- Aucune trace d'historique dans l'interface ---
 assert.doesNotMatch(html, /Supprimer l[’']historique/);
 assert.doesNotMatch(html, /getRemainingPurchaseLabel|purchase-remaining|semaines restantes/);
