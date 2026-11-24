@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Carte de Lyon — ⚡ 100% Hors-Ligne (Carte + .md inclus)</title>
+  <title>Carte de Lyon — ⚡ 100% Hors-Ligne (données dans index.html)</title>
 
   <!-- LEAFLET 1.9.4 CSS EMBEDDED (100% OFFLINE) -->
   <style id="leaflet-inline-css">
@@ -893,6 +893,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     .sync-indicator { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
     .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2); }
+    .sync-dot.idle { background: #94a3b8; box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25); }
+    .sync-dot.warn { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25); }
+    .sync-dot.busy { background: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25); }
+    .sync-dot.error { background: #dc2626; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25); }
 
     .map-wrapper { flex: 1; position: relative; height: 100%; min-width: 0; }
     #map { width: 100%; height: 100%; z-index: 1; cursor: crosshair; background: #f6f4ec; }
@@ -2591,7 +2595,7 @@ CARTO_GUILLOTIERE_DATA_END -->
       <div>
         <div class="brand-title">
           Carte de Lyon
-          <span class="pill-badge pill-offline">⚡ 100% Hors-Ligne (Carte + .md inclus)</span>
+          <span class="pill-badge pill-offline">⚡ 100% Hors-Ligne · données dans index.html</span>
         </div>
         <div class="brand-subtitle">
           Réseau routier et réseau TCL embarqués
@@ -2600,25 +2604,25 @@ CARTO_GUILLOTIERE_DATA_END -->
     </div>
 
     <div class="header-actions">
-      <button type="button" id="btnBindFile" class="btn btn-ghost-dark" title="Choisir un fichier .md à remplacer puis à synchroniser automatiquement pendant cette session">
+      <button type="button" id="btnBindFile" class="btn btn-emerald" title="Choisir ce fichier index.html pour y enregistrer directement toutes les modifications (y compris sur un lecteur réseau)">
         <span>🔗</span>
-        <span id="bindFileLabel">Activer sauvegarde .md automatique</span>
+        <span id="bindFileLabel">Activer l’enregistrement dans index.html</span>
       </button>
 
-      <label for="fileImportInput" class="btn btn-ghost-dark" title="Charger les marqueurs depuis un fichier .md">
+      <label for="fileImportInput" class="btn btn-ghost-dark" title="Charger les marqueurs depuis un fichier index.html ou une sauvegarde .md">
         <span>📂</span>
-        <span>Ouvrir .md</span>
+        <span>Ouvrir un fichier</span>
       </label>
-      <input type="file" id="fileImportInput" accept=".md,.markdown,.txt" style="display: none;" />
+      <input type="file" id="fileImportInput" accept=".html,.htm,.md,.markdown,.txt" style="display: none;" />
 
-      <button type="button" id="btnExportMd" class="btn btn-primary" title="Télécharger une copie Markdown des marqueurs">
+      <button type="button" id="btnExportMd" class="btn btn-outline" title="Sauvegarde externe facultative au format Markdown">
         <span>💾</span>
-        <span>Télécharger .md (<span id="exportCount">0</span>)</span>
+        <span>Sauvegarde .md (<span id="exportCount">0</span>)</span>
       </button>
 
-      <button type="button" id="btnExportStandaloneHtml" class="btn btn-emerald" title="Exporter un fichier index.html unique contenant la carte hors-ligne ET vos marqueurs .md mis à jour (1 seul fichier à emporter !)">
+      <button type="button" id="btnExportStandaloneHtml" class="btn btn-primary" title="Télécharger une copie de index.html contenant la carte et toutes vos données (si vous n’avez pas activé l’enregistrement direct)">
         <span>📦</span>
-        <span>Exporter HTML tout-en-un</span>
+        <span>Télécharger index.html</span>
       </button>
     </div>
   </header>
@@ -2633,7 +2637,7 @@ CARTO_GUILLOTIERE_DATA_END -->
           <span class="tab-badge" id="markerCountBadge">0</span>
         </button>
         <button type="button" class="tab-btn" data-tab="markdown">
-          <span>📄 Fichier .md inclus</span>
+          <span>💾 Sauvegarde .md</span>
         </button>
       </div>
 
@@ -2649,7 +2653,7 @@ CARTO_GUILLOTIERE_DATA_END -->
       <div class="tab-panel" id="tab-markdown">
         <div class="md-preview-container">
           <div class="md-preview-toolbar">
-            <span style="font-size: 12px; font-weight: 700; color: var(--text-main);">marqueurs-guillotiere.md</span>
+            <span style="font-size: 12px; font-weight: 700; color: var(--text-main);">Sauvegarde externe .md (facultative)</span>
             <div style="display: flex; gap: 6px;">
               <button type="button" id="btnCopyMd" class="btn btn-outline btn-sm">📋 Copier</button>
               <button type="button" id="btnDownloadMdFromTab" class="btn btn-primary btn-sm">💾 Télécharger .md</button>
@@ -2661,8 +2665,8 @@ CARTO_GUILLOTIERE_DATA_END -->
 
       <div class="sidebar-footer">
         <div class="sync-indicator">
-          <span class="sync-dot" id="syncDot"></span>
-          <span id="syncStatusText" role="status" aria-live="polite">Sauvegarde .md automatique inactive — téléchargez une copie</span>
+          <span class="sync-dot idle" id="syncDot"></span>
+          <span id="syncStatusText" role="status" aria-live="polite">Enregistrement dans index.html inactif — données lues depuis le fichier HTML</span>
         </div>
         <button type="button" id="btnExportLog" class="btn btn-outline btn-sm">Exporter et purger le journal .log</button>
         <button type="button" id="btnClearAll" class="btn btn-danger-outline btn-sm">Tout effacer</button>
@@ -2764,7 +2768,7 @@ CARTO_GUILLOTIERE_DATA_END -->
 
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" id="btnCancelModal">Annuler</button>
-          <button type="submit" class="btn btn-primary">Enregistrer dans le .md</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
         </div>
       </form>
     </div>
@@ -2842,7 +2846,9 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         name: "Quartier de la Guillotière — Place Gabriel Péri, Lyon"
       };
       const MAX_RADIUS_METERS = 5000;
-      const STORAGE_KEY = "carto_offline_lyon_guillotiere_v12";
+      // Ancienne clé localStorage : conservée uniquement pour proposer une
+      // migration ponctuelle des données d'un navigateur, jamais pour l'affichage.
+      const LEGACY_STORAGE_KEY = "carto_offline_lyon_guillotiere_v12";
 
       const BORDER_COLORS = [
         {
@@ -3748,7 +3754,8 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       let fileHandle = null;
       let fileWriteQueue = Promise.resolve();
       let fileSaveVersion = 0;
-      let localStorageFailed = false;
+      // Fichier index.html lié en écriture : les modifications y sont enregistrées.
+      let fileHandleLinked = false;
       let showTransitLayer = true;
 
       function getDistanceFromGuillotiere(lat, lng) {
@@ -4263,62 +4270,324 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         return imported;
       }
 
+      // ---------------------------------------------------------------------
+      // Le fichier index.html est la seule source de vérité des données :
+      // les marqueurs sont lus dans le bloc <script id="embedded-markdown">
+      // puis réécrits à cet endroit précis quand l'utilisateur relie le fichier.
+      // Le localStorage n'est plus jamais utilisé pour les marqueurs (chaque
+      // navigateur ayant le sien, deux PC pouvaient afficher des données
+      // différentes sur un même fichier partagé). Le .md n'est qu'un export.
+      // ---------------------------------------------------------------------
+      const DATA_START_MARKER = "<!-- CARTO_GUILLOTIERE_DATA_START";
+      const DATA_END_MARKER = "CARTO_GUILLOTIERE_DATA_END -->";
+      let dataOrigin = "embedded-html";
+
+      function readMarkdownFromHtmlDocument(htmlText) {
+        const text = String(htmlText || "");
+        const openIdx = text.indexOf('<script id="embedded-markdown"');
+        if (openIdx < 0) return null;
+        const contentStart = text.indexOf(">", openIdx);
+        if (contentStart < 0) return null;
+        const closeIdx = text.indexOf("</script", contentStart);
+        if (closeIdx < 0) return null;
+        return text.slice(contentStart + 1, closeIdx);
+      }
+
+      function extractDataBlock(mdText) {
+        const startIdx = mdText.indexOf(DATA_START_MARKER);
+        if (startIdx < 0) return null;
+        const endIdx = mdText.indexOf(DATA_END_MARKER, startIdx);
+        if (endIdx < 0) return null;
+        const raw = mdText.slice(startIdx + DATA_START_MARKER.length, endIdx).trim();
+        try {
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : null;
+        } catch (err) {
+          return null;
+        }
+      }
+
+      function stripEmbeddedMarkdownFromHtml(htmlText) {
+        const text = String(htmlText || "");
+        const openIdx = text.indexOf('<script id="embedded-markdown"');
+        if (openIdx < 0) return { before: text, after: "" };
+        const contentStart = text.indexOf(">", openIdx);
+        if (contentStart < 0) return { before: text, after: "" };
+        const closeIdx = text.indexOf("</script", contentStart);
+        if (closeIdx < 0) return { before: text, after: "" };
+        // La balise fermante est conservée : seule la donnée change.
+        return { before: text.slice(0, contentStart + 1), after: text.slice(closeIdx) };
+      }
+
+      function parseHtmlDocumentToMarkers(htmlText) {
+        const md = readMarkdownFromHtmlDocument(htmlText);
+        if (md === null) return null;
+        // Aucun repli sur le localStorage : seule l'empreinte du fichier compte.
+        return { mdContent: md, markers: parseMarkdownToMarkers(md), hasDataBlock: extractDataBlock(md) !== null };
+      }
+
+      // Construit la page complète qui sera écrite sur le disque : les données
+      // remplacent uniquement le contenu du bloc embarqué, le reste du fichier
+      // (carte, styles, scripts) est conservé octet pour octet.
+      function buildHtmlDocumentWithData(htmlText, mdContent) {
+        const parts = stripEmbeddedMarkdownFromHtml(htmlText);
+        return parts.before + "\n" + mdContent + "\n  " + parts.after;
+      }
+
+      // Suit l'écart entre la page affichée et le fichier index.html du disque
+      // afin d'éviter une perte silencieuse de modifications.
+      let writtenSnapshot = null;
+      let dirtyWarned = false;
+
+      function markDirtyState() {
+        const json = JSON.stringify(markersData);
+        if (writtenSnapshot === null) writtenSnapshot = json;
+        if (dirtyWarned || json === writtenSnapshot) return;
+        dirtyWarned = true;
+        // Avertissement uniquement si rien n'est écrit dans index.html : avec un
+        // fichier lié, chaque modification part immédiatement sur le disque.
+        window.addEventListener("beforeunload", (e) => {
+          if (fileHandle) return;
+          e.preventDefault();
+          e.returnValue = "Des modifications ne sont pas enregistrées dans index.html.";
+          return e.returnValue;
+        });
+      }
+
+      function setSyncStatus(message, state) {
+        const textEl = document.getElementById("syncStatusText");
+        if (textEl) textEl.textContent = message;
+        const dotEl = document.getElementById("syncDot");
+        if (dotEl) dotEl.className = "sync-dot" + (state ? " " + state : "");
+      }
+
       // Les écritures sont sérialisées : une modification ancienne ne peut pas
       // terminer après une modification plus récente et écraser la sauvegarde.
       function saveAndSyncAll() {
         const mdContent = generateMarkdownContent();
         const embeddedMdEl = document.getElementById("embedded-markdown");
+        // Le bloc embarqué reflète toujours l'état affiché, sans écriture disque.
         if (embeddedMdEl) embeddedMdEl.textContent = "\n" + mdContent + "\n  ";
-
-        try {
-          localStorage.setItem(STORAGE_KEY, mdContent);
-          localStorageFailed = false;
-        } catch (err) {
-          console.warn("Erreur de sauvegarde dans le navigateur :", err);
-          if (!localStorageFailed) {
-            showToast("Sauvegarde dans le navigateur impossible. Téléchargez une copie .md pour protéger vos données.", "error");
-          }
-          localStorageFailed = true;
-        }
 
         document.getElementById("mdLiveOutput").value = mdContent;
         document.getElementById("markerCountBadge").textContent = markersData.length;
         document.getElementById("exportCount").textContent = markersData.length;
 
+        markDirtyState();
+
         const handle = fileHandle;
         if (!handle) {
-          document.getElementById("syncStatusText").textContent = localStorageFailed
-            ? "Sauvegarde navigateur impossible — téléchargez une copie .md"
-            : "Sauvegarde .md automatique inactive — téléchargez une copie";
+          if (fileHandleLinked) {
+            setSyncStatus(
+              dataOrigin === "import"
+                ? "Données lues depuis un fichier importé — non enregistrées dans index.html. Reliez le fichier pour les y enregistrer."
+                : "Enregistrement dans index.html inactif — les modifications ne sont pas écrites sur le disque",
+              "warn"
+            );
+          } else {
+            setSyncStatus(
+              "Enregistrement dans index.html inactif — activez-le pour écrire les modifications dans le fichier",
+              "idle"
+            );
+          }
           return Promise.resolve(false);
         }
 
         const version = ++fileSaveVersion;
-        document.getElementById("syncStatusText").textContent = `Enregistrement dans ${handle.name}…`;
+        setSyncStatus(`Enregistrement dans ${handle.name}…`, "busy");
         const write = fileWriteQueue.then(async () => {
           let writable;
           try {
+            // On relit le fichier pour ne jamais perdre un autre bloc ou une
+            // mise à jour faite entre-temps (lecteur réseau partagé). Si le
+            // fichier n'existe pas encore, on part de la page affichée.
+            let baseHtml = "";
+            try {
+              baseHtml = await handle.getFile().then((f) => f.text());
+            } catch (readErr) {
+              baseHtml = document.documentElement.outerHTML;
+            }
+            const nextHtml = buildHtmlDocumentWithData(baseHtml, mdContent);
             writable = await handle.createWritable();
-            await writable.write(mdContent);
+            await writable.write(nextHtml);
             await writable.close();
+            writtenSnapshot = JSON.stringify(markersData);
             if (fileHandle === handle && version === fileSaveVersion) {
-              document.getElementById("syncStatusText").textContent = `Sauvegardé dans ${handle.name}`;
+              setSyncStatus(`Enregistré dans ${handle.name} — ${new Date().toLocaleTimeString("fr-FR")}`, "ok");
             }
             return true;
           } catch (err) {
             if (writable && typeof writable.abort === "function") {
               try { await writable.abort(); } catch (_) { /* l’écriture a déjà échoué */ }
             }
-            console.error("Erreur écriture fichier .md lié :", err);
+            console.error("Erreur d’écriture dans le fichier HTML lié :", err);
             if (fileHandle === handle) {
-              document.getElementById("syncStatusText").textContent = `Échec de sauvegarde dans ${handle.name} — téléchargez une copie`;
-              showToast("Écriture du fichier .md impossible. Téléchargez une copie ou reliez à nouveau un fichier.", "error");
+              setSyncStatus(`Échec d’enregistrement dans ${handle.name} — utilisez « Télécharger index.html »`, "error");
+              showToast(
+                "Impossible d’écrire dans le fichier index.html. Autorisez la permission d’écriture, ou utilisez « Télécharger index.html ».",
+                "error"
+              );
             }
             return false;
           }
         });
         fileWriteQueue = write.then(() => undefined);
         return write;
+      }
+
+      async function pickHtmlFileForWriting() {
+        return window.showSaveFilePicker({
+          suggestedName: "index.html",
+          types: [{ description: "Page HTML (index.html)", accept: { "text/html": [".html", ".htm"] } }]
+        });
+      }
+
+      async function readFileHandleText(handle) {
+        const file = await handle.getFile();
+        return file.text();
+      }
+
+      // Active l'enregistrement direct : les modifications suivantes sont
+      // écrites dans index.html lui-même (fonctionne sur un lecteur réseau,
+      // y compris avec un chemin UNC \\serveur\partage\index.html).
+      async function bindLocalHtmlFile() {
+        if (!("showSaveFilePicker" in window)) {
+          showToast(
+            "Ce navigateur ne permet pas d’enregistrer directement dans le fichier. Utilisez « Télécharger index.html » puis remplacez le fichier sur le lecteur réseau.",
+            "info"
+          );
+          downloadStandaloneHtml();
+          return;
+        }
+        try {
+          const handle = await pickHtmlFileForWriting();
+          const currentText = await readFileHandleText(handle);
+
+          const parsed = parseHtmlDocumentToMarkers(currentText);
+          if (!parsed) {
+            showToast(
+              "Ce fichier ne semble pas être la page de la carte (bloc de données introuvable). Choisissez le fichier <strong>index.html</strong> de l’application.",
+              "error"
+            );
+            return;
+          }
+
+          const diskMarkers = parsed.markers;
+          const diskJson = parsed.hasDataBlock ? JSON.stringify(diskMarkers) : null;
+          const memoryJson = JSON.stringify(markersData);
+          if (diskJson !== null && diskJson !== memoryJson) {
+            const useMemory = window.confirm(
+              `Le fichier « ${handle.name} » contient ${diskMarkers.length} marqueur(s), alors que cette page en affiche ${markersData.length}.\n\n` +
+                "• OK : remplacer le contenu du fichier par les données affichées ici.\n" +
+                "• Annuler : charger les données du fichier dans cette page (le fichier n’est pas modifié)."
+            );
+            if (!useMemory) {
+              fileHandle = handle;
+              fileHandleLinked = true;
+              markBindState(handle.name);
+              applyMarkersFromSource(diskMarkers, "file", `Données chargées depuis <strong>${escapeHtml(handle.name)}</strong>.`);
+              setSyncStatus(`Lié à ${handle.name} — les modifications suivantes y seront enregistrées`, "ok");
+              return;
+            }
+          }
+
+          fileHandle = handle;
+          fileHandleLinked = true;
+          dataOrigin = "file";
+          markBindState(handle.name);
+          const saved = await saveAndSyncAll();
+          if (saved && fileHandle === handle) {
+            showToast(
+              `Enregistrement direct activé dans <strong>${escapeHtml(handle.name)}</strong>. Chaque modification est écrite dans ce fichier HTML (lecteur réseau compris) tant que la page reste ouverte.`,
+              "success"
+            );
+          }
+        } catch (err) {
+          if (err.name !== "AbortError") {
+            console.error("Impossible de lier le fichier index.html :", err);
+            showToast(
+              "Impossible d’enregistrer dans ce fichier. Vérifiez la permission d’écriture du lecteur réseau, ou utilisez « Télécharger index.html ».",
+              "error"
+            );
+          }
+        }
+      }
+
+      function markBindState(fileName) {
+        const btn = document.getElementById("btnBindFile");
+        if (btn) btn.classList.add("active-sync");
+        const label = document.getElementById("bindFileLabel");
+        if (label) label.textContent = "Enregistrement actif : " + fileName;
+      }
+
+      // Remplace l'état affiché par une liste de marqueurs et met à jour l'UI.
+      function applyMarkersFromSource(list, origin, message) {
+        cancelMarkerMove();
+        leafletMarkers.forEach((lf) => map.removeLayer(lf));
+        leafletMarkers.clear();
+        closePurchaseDialog();
+        const expired = expireDuePurchases(list);
+        markersData = list;
+        markersData.forEach((m) => addOrUpdateLeafletMarker(m));
+        renderSidebarList();
+        dataOrigin = origin;
+        saveAndSyncAll();
+        updatePurchaseCountdownLabels();
+        if (expired.length > 0) {
+          showToast(
+            `${expired.length} achat(s) expiré(s) détecté(s) : couleur d’origine restaurée, achat mémorisé.`,
+            "info"
+          );
+        }
+        if (message) showToast(message, "success");
+      }
+
+      // Sauvegarde externe facultative : le fichier .md n'est qu'une copie.
+      function downloadMarkdownFile() {
+        const mdContent = generateMarkdownContent();
+        const blob = new Blob([mdContent], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "marqueurs-guillotiere.md";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Sauvegarde externe <strong>marqueurs-guillotiere.md</strong> téléchargée.", "info");
+      }
+
+      function downloadStandaloneHtml() {
+        const mdContent = generateMarkdownContent();
+        // On sérialise une copie propre de la page (sans infobulles, toasts ni
+        // état de carte) pour que le fichier téléchargé soit directement réutilisable.
+        const clone = document.documentElement.cloneNode(true);
+        const mapEl = clone.querySelector("#map");
+        if (mapEl) { mapEl.innerHTML = ""; mapEl.removeAttribute("style"); mapEl.removeAttribute("class"); }
+        const toastEl = clone.querySelector("#toastContainer");
+        if (toastEl) toastEl.innerHTML = "";
+        clone.querySelectorAll(".modal-backdrop.open, dialog[open]").forEach((el) => {
+          el.classList.remove("open");
+          el.removeAttribute("open");
+        });
+        const bindBtn = clone.querySelector("#btnBindFile");
+        if (bindBtn) bindBtn.classList.remove("active-sync");
+        const bindLabel = clone.querySelector("#bindFileLabel");
+        if (bindLabel) bindLabel.textContent = "Activer l’enregistrement dans index.html";
+        const currentHtml = buildHtmlDocumentWithData(clone.outerHTML, mdContent);
+        const blob = new Blob([currentHtml], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "index.html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(
+          `<strong>index.html</strong> téléchargé avec les ${markersData.length} marqueur(s) intégrés. Remplacez le fichier du lecteur réseau par celui-ci.`,
+          "success"
+        );
       }
 
       const SESSION_LOG_KEY = "carto_opening_log_v1";
@@ -4387,133 +4656,6 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           }
         });
         dialog.showModal();
-      }
-
-      function downloadMarkdownFile() {
-        const mdContent = generateMarkdownContent();
-        const blob = new Blob([mdContent], { type: "text/markdown;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "marqueurs-guillotiere.md";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast("Téléchargement de <strong>marqueurs-guillotiere.md</strong> lancé. Vérifiez votre dossier de téléchargements.", "info");
-      }
-
-      function exportStandaloneHtmlWithEmbeddedMd() {
-        const mdContent = generateMarkdownContent();
-        const leafletCss = document.getElementById("leaflet-inline-css").textContent;
-        const appCss = document.getElementById("app-inline-css").textContent;
-        const leafletJs = document.getElementById("leaflet-inline-js").textContent;
-        const mapDataJs = document.getElementById("lyon-offline-map-data").textContent;
-        const appJs = document.getElementById("app-inline-js").textContent;
-
-        const bodyClone = document.body.cloneNode(true);
-        const mapClone = bodyClone.querySelector("#map");
-        if (mapClone) {
-          mapClone.innerHTML = "";
-          mapClone.removeAttribute("class");
-          mapClone.removeAttribute("style");
-          mapClone.removeAttribute("tabindex");
-        }
-        const bindClone = bodyClone.querySelector("#btnBindFile");
-        if (bindClone) bindClone.classList.remove("active-sync");
-        const bindLabelClone = bodyClone.querySelector("#bindFileLabel");
-        if (bindLabelClone) bindLabelClone.textContent = "Activer sauvegarde .md automatique";
-        const syncClone = bodyClone.querySelector("#syncStatusText");
-        if (syncClone) syncClone.textContent = "Sauvegarde .md automatique inactive — téléchargez une copie";
-        const toastClone = bodyClone.querySelector("#toastContainer");
-        if (toastClone) toastClone.innerHTML = "";
-        const modalClone = bodyClone.querySelector("#markerModal");
-        if (modalClone) modalClone.classList.remove("open");
-        const purchaseModalClone = bodyClone.querySelector("#purchaseModal");
-        if (purchaseModalClone) {
-          purchaseModalClone.classList.remove("open");
-          purchaseModalClone.querySelectorAll('input[name="restrictionReason"]').forEach((input) => {
-            input.checked = false;
-            input.removeAttribute("checked");
-          });
-          const removeBtnClone = purchaseModalClone.querySelector("#btnRemovePurchase");
-          if (removeBtnClone) {
-            removeBtnClone.setAttribute("hidden", "");
-            removeBtnClone.textContent = "Annuler la restriction";
-          }
-          const purchaseContextClone = purchaseModalClone.querySelector("#purchaseContext");
-          if (purchaseContextClone) purchaseContextClone.innerHTML = "";
-        }
-        const purchaseHintClone = bodyClone.querySelector("#modalPurchaseHint");
-        if (purchaseHintClone) {
-          purchaseHintClone.setAttribute("hidden", "");
-          purchaseHintClone.innerHTML = "";
-        }
-        bodyClone.querySelectorAll("script").forEach((s) => s.remove());
-
-        const closeScriptTag = "</" + "script>";
-        const fullHtml = [
-          "<!DOCTYPE html>",
-          '<html lang="fr">',
-          "<head>",
-          '  <meta charset="UTF-8" />',
-          '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />',
-          "  <title>Carte de Lyon — ⚡ 100% Hors-Ligne (Carte + .md inclus)</title>",
-          '  <style id="leaflet-inline-css">' + leafletCss + "</style>",
-          '  <style id="app-inline-css">' + appCss + "</style>",
-          "</head>",
-          "<body>",
-          '  <script id="embedded-markdown" type="text/markdown">\n' + mdContent + "\n  " + closeScriptTag,
-          bodyClone.innerHTML,
-          '  <script id="leaflet-inline-js">' + leafletJs + closeScriptTag,
-          '  <script id="lyon-offline-map-data">' + mapDataJs + closeScriptTag,
-          '  <script id="app-inline-js">' + appJs + closeScriptTag,
-          "</body>",
-          "</html>"
-        ].join("\n");
-
-        const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "index.html";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast(
-          "Fichier <strong>index.html</strong> tout-en-un exporté ! Il contient la carte de Lyon hors-ligne ET vos " +
-            markersData.length +
-            " marqueur(s) .md intégrés (1 seul fichier à emporter).",
-          "success"
-        );
-      }
-
-      async function bindLocalMarkdownFile() {
-        if (!("showSaveFilePicker" in window)) {
-          showToast("La sauvegarde automatique dans un fichier n’est pas prise en charge ici. Téléchargez une copie .md après vos modifications.", "info");
-          downloadMarkdownFile();
-          return;
-        }
-        if (!confirm("Le fichier choisi sera remplacé par les données actuellement affichées, puis mis à jour automatiquement pendant cette session. Pour restaurer une sauvegarde existante, utilisez d’abord « Ouvrir .md ». Continuer ?")) return;
-        try {
-          const chosenHandle = await window.showSaveFilePicker({
-            suggestedName: "marqueurs-guillotiere.md",
-            types: [{ description: "Fichier Markdown (.md)", accept: { "text/markdown": [".md", ".markdown"] } }]
-          });
-          fileHandle = chosenHandle;
-          document.getElementById("btnBindFile").classList.add("active-sync");
-          document.getElementById("bindFileLabel").textContent = "Lié : " + chosenHandle.name;
-          const saved = await saveAndSyncAll();
-          if (saved && fileHandle === chosenHandle) {
-            showToast(`Fichier <strong>${escapeHtml(chosenHandle.name)}</strong> lié et sauvegardé. Les modifications suivantes seront enregistrées automatiquement pendant cette session.`, "success");
-          }
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            console.error("Impossible de sélectionner le fichier .md :", err);
-            showToast("Impossible de lier le fichier .md. Téléchargez une copie à la place.", "error");
-          }
-        }
       }
 
       function getMarkerDisplayLatLng(markerObj) {
@@ -5514,7 +5656,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
             normalizeMarkerColorState(existing);
             addOrUpdateLeafletMarker(existing);
             const purchaseNote = existing.purchase ? " L’achat reste mémorisé ; la couleur choisie est appliquée." : "";
-            showToast(`Marqueur « <strong>${escapeHtml(title)}</strong> » mis à jour dans le .md.${purchaseNote}`, "success");
+            showToast(`Marqueur « <strong>${escapeHtml(title)}</strong> » mis à jour.${purchaseNote}${fileHandleLinked ? "" : " Activez l’enregistrement dans index.html pour l’écrire dans le fichier."}`, "success");
           }
         } else if (pendingLatLng) {
           const newMarker = {
@@ -5533,7 +5675,7 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           markersData.push(newMarker);
           const lf = addOrUpdateLeafletMarker(newMarker);
           if (map.hasLayer(lf)) lf.openPopup();
-          showToast(`Marqueur « <strong>${escapeHtml(title)}</strong> » ajouté et enregistré dans le .md !`, "success");
+          showToast(`Marqueur « <strong>${escapeHtml(title)}</strong> » ajouté.${fileHandleLinked ? " Enregistré dans index.html." : " Activez l’enregistrement dans index.html pour l’écrire dans le fichier."}`, "success");
         }
 
         closeMarkerModal();
@@ -5601,8 +5743,8 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
 
       document.getElementById("btnExportMd").addEventListener("click", downloadMarkdownFile);
       document.getElementById("btnDownloadMdFromTab").addEventListener("click", downloadMarkdownFile);
-      document.getElementById("btnExportStandaloneHtml").addEventListener("click", exportStandaloneHtmlWithEmbeddedMd);
-      document.getElementById("btnBindFile").addEventListener("click", bindLocalMarkdownFile);
+      document.getElementById("btnExportStandaloneHtml").addEventListener("click", downloadStandaloneHtml);
+      document.getElementById("btnBindFile").addEventListener("click", bindLocalHtmlFile);
 
       document.getElementById("btnCopyMd").addEventListener("click", async () => {
         const mdText = generateMarkdownContent();
@@ -5617,19 +5759,29 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         }
       });
 
+      // Ouverture d'un fichier : index.html (source de vérité, avec sa carte)
+      // ou sauvegarde externe .md. Seul le bloc de données est repris.
       document.getElementById("fileImportInput").addEventListener("change", (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          const content = String(evt.target.result || "");
-          const imported = parseMarkdownToMarkers(content);
+        const isHtml = /\.html?$/i.test(file.name) || /text\/html/i.test(file.type || "");
+        const applyContent = (content) => {
+          const mdText = isHtml ? readMarkdownFromHtmlDocument(content) : content;
+          if (mdText === null) {
+            showToast(
+              "Ce fichier HTML ne contient pas de bloc de données. Choisissez le fichier <strong>index.html</strong> de la carte.",
+              "error"
+            );
+            e.target.value = "";
+            return;
+          }
 
+          const imported = parseMarkdownToMarkers(mdText);
           // Un export valide peut intentionnellement contenir une liste vide.
-          const emptyBackup = /<!--\s*CARTO_GUILLOTIERE_DATA_START\s*\[\s*\]\s*CARTO_GUILLOTIERE_DATA_END\s*-->/.test(content);
+          const emptyBackup = /<!--\s*CARTO_GUILLOTIERE_DATA_START\s*\[\s*\]\s*CARTO_GUILLOTIERE_DATA_END\s*-->/.test(mdText);
           if (imported.length === 0 && !emptyBackup) {
-            showToast("Aucun marqueur valide trouvé dans ce fichier .md.", "error");
+            showToast("Aucun marqueur valide trouvé dans ce fichier.", "error");
             e.target.value = "";
             return;
           }
@@ -5651,31 +5803,14 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
           }
 
           const warning = fileHandle
-            ? `Les données actuelles seront remplacées et le fichier lié « ${fileHandle.name} » sera écrasé. Continuer ?`
-            : "Les données actuelles seront remplacées par le contenu de ce fichier. Continuer ?";
+            ? `Les données actuelles seront remplacées, puis le fichier lié « ${fileHandle.name} » sera mis à jour. Continuer ?`
+            : "Les données actuelles affichées seront remplacées par le contenu de ce fichier. Continuer ?";
           if (!confirm(warning)) {
             e.target.value = "";
             return;
           }
 
-          cancelMarkerMove();
-          leafletMarkers.forEach((lf) => map.removeLayer(lf));
-          leafletMarkers.clear();
-          closePurchaseDialog();
-
-          const expiredOnImport = expireDuePurchases(validMarkers);
-          markersData = validMarkers;
-          markersData.forEach((m) => addOrUpdateLeafletMarker(m));
-          renderSidebarList();
-          saveAndSyncAll();
-          updatePurchaseCountdownLabels();
-
-          if (expiredOnImport.length > 0) {
-            showToast(
-              `${expiredOnImport.length} achat(s) expiré(s) détecté(s) lors de l’import : couleur d’origine restaurée, achat mémorisé.`,
-              "info"
-            );
-          }
+          applyMarkersFromSource(validMarkers, "import", null);
 
           if (skippedOut > 0) {
             showToast(
@@ -5683,12 +5818,19 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
               "info"
             );
           } else {
-            showToast(`${validMarkers.length} marqueur(s) chargé(s) depuis <strong>${escapeHtml(file.name)}</strong> !`, "success");
+            showToast(
+              `${validMarkers.length} marqueur(s) chargé(s) depuis <strong>${escapeHtml(file.name)}</strong>.` +
+                (fileHandle ? "" : " Activez l’enregistrement dans index.html pour les écrire dans le fichier."),
+              "success"
+            );
           }
           e.target.value = "";
         };
+
+        const reader = new FileReader();
+        reader.onload = (evt) => applyContent(String(evt.target.result || ""));
         reader.onerror = () => {
-          showToast("Impossible de lire ce fichier .md. Les données actuelles sont conservées.", "error");
+          showToast("Impossible de lire ce fichier. Les données actuelles sont conservées.", "error");
           e.target.value = "";
         };
         reader.readAsText(file, "UTF-8");
@@ -5749,27 +5891,47 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         }
       });
 
-      function initApp() {
-        let mdSource = "";
+      function readEmbeddedMarkdown() {
+        const embeddedEl = document.getElementById("embedded-markdown");
+        return embeddedEl ? embeddedEl.textContent : "";
+      }
+
+      // Migration ponctuelle : si ce navigateur possède d'anciennes données
+      // (versions précédentes), on propose de les écrire dans index.html une
+      // seule fois. Le localStorage n'est ensuite plus jamais consulté.
+      function offerLegacyMigration() {
+        let legacy = "";
         try {
-          const savedMd = localStorage.getItem(STORAGE_KEY);
-          if (savedMd && savedMd.trim()) {
-            mdSource = savedMd;
-          }
+          legacy = localStorage.getItem(LEGACY_STORAGE_KEY) || "";
         } catch (err) {
-          console.warn("Erreur lecture localStorage:", err);
+          return;
         }
-
-        if (!mdSource) {
-          const embeddedEl = document.getElementById("embedded-markdown");
-          if (embeddedEl && embeddedEl.textContent.trim()) {
-            mdSource = embeddedEl.textContent.trim();
-          }
+        if (!legacy.trim()) return;
+        const legacyMarkers = parseMarkdownToMarkers(legacy);
+        if (!legacyMarkers.length) return;
+        if (JSON.stringify(legacyMarkers) === JSON.stringify(markersData)) {
+          try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch (err) { /* ignoré */ }
+          return;
         }
+        if (!window.confirm(
+          `Ce navigateur contient d’anciennes données locales (${legacyMarkers.length} marqueur(s)) différentes du fichier index.html.\n\n` +
+            "Les données du fichier sont affichées. Cliquez sur OK pour utiliser les anciennes données locales à la place (écrites ensuite dans index.html), ou Annuler pour les ignorer définitivement."
+        )) {
+          try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch (err) { /* ignoré */ }
+          return;
+        }
+        applyMarkersFromSource(legacyMarkers, "import", "Anciennes données locales reprises. Activez l’enregistrement dans index.html pour les y écrire.");
+        try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch (err) { /* ignoré */ }
+      }
 
-        if (mdSource) {
+      function initApp() {
+        // Les données proviennent uniquement du fichier HTML : deux PC qui
+        // ouvrent le même index.html affichent donc exactement la même chose.
+        const mdSource = readEmbeddedMarkdown();
+        if (mdSource && mdSource.trim()) {
           markersData = parseMarkdownToMarkers(mdSource);
         }
+        dataOrigin = "embedded-html";
 
         const expiredOnLoad = checkPurchaseExpirations({ notify: false, refresh: false });
         markersData.forEach((m) => addOrUpdateLeafletMarker(m));
@@ -5779,10 +5941,13 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
 
         if (expiredOnLoad > 0) {
           showToast(
-            `${expiredOnLoad} achat(s) arrivé(s) à expiration : la couleur d’origine a été restaurée, achat mémorisé.`,
+            `${expiredOnLoad} achat(s) arrivé(s) à expiration : la couleur d’origine a été restaurée, achat mémorisé.` +
+              (fileHandleLinked ? "" : " Activez l’enregistrement dans index.html pour conserver ce changement."),
             "info"
           );
         }
+
+        offerLegacyMigration();
 
         setInterval(() => checkPurchaseExpirations(), 30 * 1000);
         window.addEventListener("focus", () => checkPurchaseExpirations());
