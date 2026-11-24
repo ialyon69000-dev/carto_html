@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const html = fs.readFileSync('index.html', 'utf8');
-const source = html.slice(html.indexOf('      const SESSION_LOG_KEY'), html.indexOf('      function downloadMarkdownFile('));
+const source = html.slice(html.indexOf('      const SESSION_LOG_KEY'), html.indexOf('      function getMarkerDisplayLatLng('));
 const store = new Map();
 let downloaded = '', confirmations = true, clickFails = false;
 const ctx = {
