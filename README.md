@@ -1,4 +1,4 @@
-# 🗺️ Carte de Lyon — ⚡ 100% Hors-Ligne (Carte + .md inclus)
+# 🗺️ Carte de Lyon — ⚡ 100% Hors-Ligne (données dans index.html)
 
 Application cartographique **totalement autonome (100% hors-ligne)** centrée sur le quartier de **La Guillotière (Place Gabriel Péri, Lyon 7e/3e)** avec une **zone couverte** de 5 km (simple limite d'affichage, sans notion de distance dans les fiches). **Toutes les données sont stockées dans le fichier `index.html`** (bloc embarqué) ; le fichier **Markdown (`.md`)** n'est qu'une sauvegarde externe facultative.
 
@@ -39,18 +39,29 @@ Application cartographique **totalement autonome (100% hors-ligne)** centrée su
   - Aucune distance au centre n'est affichée : ni dans le tableau `.md`, ni dans les fiches, ni dans les infobulles, ni dans la barre d'état. Les anneaux de distance (1 km / 2,5 km) ainsi que le bouton associé ont été retirés ; seul le contour de la zone subsiste.
 - **Aucun stockage dans le navigateur pour les marqueurs** : deux PC qui ouvrent le même fichier `index.html` (y compris sur un lecteur réseau) affichent donc exactement les mêmes données. Une ancienne copie locale éventuelle n’est proposée qu’une seule fois, à la migration.
 
+## 🧭 Interface : trois actions seulement
+
+L’application s’ouvre **directement sur la base** : aucune fenêtre d’identification, aucun journal d’ouvertures, aucun enregistrement d’activité (le trigramme et l’export du journal `.log` ont été retirés).
+
+Trois actions sont disponibles en haut de la page :
+
+| Action | Effet |
+|---|---|
+| 🔗 **Enregistrer dans index.html** | Lie le fichier `index.html` (y compris sur un lecteur réseau) : chaque modification est écrite directement dedans. |
+| 📂 **Charger un fichier .md** | Remplace la base affichée par le contenu d’une sauvegarde `.md` (ou d’un `index.html`). |
+| 💾 **Exporter le fichier .md** | Télécharge une sauvegarde externe `marqueurs-guillotiere.md`. |
+
+Le panneau latéral n’affiche plus que la liste des marqueurs (recherche, filtres par catégorie et par couleur), l’indicateur d’enregistrement et le bouton « Tout effacer ».
+
 ## 💾 Enregistrer les données (fichier HTML = source de vérité)
 
-1. **Enregistrement direct dans `index.html`** : cliquez sur « 🔗 Activer l’enregistrement dans index.html » puis désignez **le fichier `index.html` lui-même** (sur un lecteur réseau, sélectionnez le fichier partagé, par exemple `\\serveur\partage\index.html`). À partir de là, chaque modification (fiche, couleur, achat, déplacement, suppression, expiration d’une restriction) est **écrite immédiatement dans le fichier HTML**, sans passer par le `.md`.
-2. Le navigateur demande l’autorisation d’écriture : acceptez-la, sinon l’application propose de télécharger une copie de `index.html`.
+1. **Enregistrement direct dans `index.html`** : cliquez sur « 🔗 Enregistrer dans index.html » puis désignez **le fichier `index.html` lui-même** (sur un lecteur réseau, sélectionnez le fichier partagé, par exemple `\\serveur\partage\index.html`). À partir de là, chaque modification (fiche, couleur, achat, déplacement, suppression, expiration d’une restriction) est **écrite immédiatement dans le fichier HTML**.
+2. Le navigateur demande l’autorisation d’écriture : acceptez-la. Sans autorisation, rien n’est écrit sur le disque et le voyant passe en orange puis en rouge.
 3. Si le fichier choisi contient déjà d’autres données que la page affichée, un choix explicite est proposé : **remplacer le fichier** par les données affichées, ou **charger les données du fichier** dans la page. Aucun écrasement silencieux n’est possible.
-4. La liaison ne dure que **le temps de la page** (limite du navigateur) : après un rechargement ou une réouverture du fichier, réactivez-la en un clic. Le voyant en bas du panneau indique l’état : gris = inactif, bleu = écriture, vert = enregistré, orange = modifications non écrites, rouge = échec.
-5. Si votre navigateur ne prend pas en charge l’écriture directe (ou si vous préférez être prudent), « 📦 Télécharger index.html » produit une copie complète contenant la carte **et** toutes les données ; remplacez ensuite le fichier du lecteur réseau par cette copie.
-6. Sur un lecteur réseau, deux PC doivent éviter de modifier **en même temps** : le dernier enregistrement remplace l’autre (le fichier est relu avant chaque écriture pour ne rien casser d’autre). Pour récupérer une version à jour, rechargez simplement la page (F5).
-7. « Ouvrir un fichier » accepte désormais un `index.html` (avec sa carte) **ou** une ancienne sauvegarde `.md` : seul le bloc de données est repris.
-8. La sauvegarde `.md` (onglet « 💾 Sauvegarde .md », bouton « 💾 Sauvegarde .md ») reste disponible comme **copie externe de secours** : elle est téléchargée dans le dossier de téléchargements et n’est jamais relue automatiquement.
-
-Les tests sans dépendance se lancent avec `node tests/color-filter.test.cjs`, `node tests/move-marker.test.cjs`, `node tests/markdown-save.test.cjs`, `node tests/achat-restreint.test.cjs` et `node tests/session-log.test.cjs`.
+4. La liaison ne dure que **le temps de la page** (limite du navigateur) : après un rechargement, réactivez-la en un clic. Le voyant en bas du panneau indique l’état : gris = inactif, bleu = écriture, vert = enregistré, orange = modifications non écrites, rouge = échec.
+5. Sur un lecteur réseau, deux PC doivent éviter de modifier **en même temps** : le dernier enregistrement remplace l’autre (le fichier est relu avant chaque écriture pour ne rien casser d’autre). Pour récupérer une version à jour, rechargez simplement la page (F5).
+6. « Charger un fichier .md » accepte une sauvegarde `.md` **ou** un `index.html` : seul le bloc de données est repris.
+7. « Exporter le fichier .md » produit une **copie externe de secours** dans le dossier de téléchargements ; elle n’est jamais relue automatiquement.
 
 ## 📦 Contenu du bloc de données (mise à jour du 27/10/2026)
 
@@ -66,12 +77,4 @@ Le bloc `<script id="embedded-markdown">` de `index.html` (et son export `.md` f
 - **Restrictions persistantes et expiration** : la raison (🛒 Achat ou 🧰 Manque de matériel), la date de début, la durée de carence (3 semaines pour « Achat », aucune pour « Manque de matériel »), la date d'expiration (le cas échéant), une éventuelle couleur forcée et la couleur d'origine sont écrites dans le bloc JSON du `.md` et dans le détail du marqueur. La restriction reste visible indéfiniment, y compris après réimport, export, rechargement ou expiration ; une fois la période écoulée (uniquement pour « Achat »), la couleur d'origine est restaurée automatiquement.
 - **Identifiants** : `osm_n_<id>` pour les nœuds OSM et `osm_way_<id>` pour les bâtiments, ce qui permet de retrouver chaque commerce sur OpenStreetMap ; `manuel_<enseigne>_<magasin>` pour les 6 enseignes Fnac / Darty / Boulanger ajoutées manuellement.
 
-> ℹ️ La clé de stockage local a été incrémentée (`carto_offline_lyon_guillotiere_v12`) afin que la nouvelle liste embarquée — en bleu par défaut, sans descriptions génériques et avec historique d'achat déverrouillé — remplace l'ancienne sauvegarde du navigateur au premier chargement.
-
-## Journal des ouvertures
-
-À chaque chargement de la page, une fenêtre demande un trigramme obligatoire de trois lettres (converti en majuscules). Après validation, une entrée est conservée dans le stockage local du navigateur avec l’heure d’ouverture au format ISO (UTC). Il s’agit d’une identité déclarée, pas d’une authentification.
-
-Le bouton **Exporter et purger le journal .log**, en bas du panneau latéral, demande confirmation puis lance le téléchargement et supprime les entrées locales. Vérifiez que le téléchargement a abouti : le navigateur ne permet pas à la page de confirmer l’enregistrement effectif sur disque. Une annulation de la confirmation ne purge rien.
-
-Le journal est propre au navigateur et à son espace de stockage : il n’est pas partagé entre postes et n’est pas inclus dans les exports HTML ou Markdown. L’effacement des données du navigateur le supprime. Le stockage local doit être autorisé pour valider le trigramme ; son comportement avec un fichier ouvert directement dépend du navigateur.
+> ℹ️ Les données ne sont plus stockées dans le navigateur : elles vivent dans le bloc embarqué de `index.html`, seul fichier à partager entre postes.

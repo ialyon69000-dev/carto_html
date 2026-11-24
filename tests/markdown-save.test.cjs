@@ -13,7 +13,7 @@ function part(start, end) {
 }
 
 const elements = Object.fromEntries(
-  ['embedded-markdown', 'mdLiveOutput', 'markerCountBadge', 'exportCount', 'syncStatusText', 'syncDot', 'btnBindFile', 'bindFileLabel']
+  ['embedded-markdown', 'markerCountBadge', 'syncStatusText', 'syncDot', 'btnBindFile', 'bindFileLabel']
     .map(id => [id, {
       textContent: '', value: '', className: '',
       classList: {
@@ -45,7 +45,7 @@ const ctx = {
 };
 vm.createContext(ctx);
 vm.runInContext(
-  part('      // Le fichier index.html est la seule source', '      const SESSION_LOG_KEY') +
+  part('      // Le fichier index.html est la seule source', "      // Remplace l'état affiché") +
   part("      // Remplace l'état affiché", '      function getMarkerDisplayLatLng'),
   ctx
 );
@@ -62,7 +62,7 @@ const goodHtml = (data) => '<!DOCTYPE html>\n<html><body>\n  <script id="embedde
   assert.equal(ctx.parseHtmlDocumentToMarkers('<html><body>rien</body></html>'), null);
 
   // 2. Le démarrage ne lit plus le stockage du navigateur et n'écrit rien.
-  const initSource = part('      function initApp()', '      document.getElementById("btnExportLog")');
+  const initSource = part('      function initApp()', '      // Ouverture directe');
   assert.ok(!/localStorage/.test(initSource), 'initApp ne doit pas utiliser le stockage navigateur');
   assert.match(html, /const LEGACY_STORAGE_KEY/, 'seule une migration ponctuelle peut relire l’ancienne clé');
 
@@ -72,7 +72,7 @@ const goodHtml = (data) => '<!DOCTYPE html>\n<html><body>\n  <script id="embedde
   assert.match(elements.syncStatusText.textContent, /inactif/);
   assert.equal(elements.syncDot.className, 'sync-dot idle');
   assert.equal(elements.btnBindFile.classList.contains('active-sync'), false);
-  assert.equal(elements.exportCount.textContent, 1);
+  assert.equal(elements.markerCountBadge.textContent, 1);
   assert.match(elements["embedded-markdown"].textContent, /"id":"z"/);
 
   // 4. Écriture sérialisée dans le fichier HTML lié, sans altérer le reste du fichier.
