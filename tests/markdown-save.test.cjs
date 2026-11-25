@@ -67,10 +67,12 @@ const goodHtml = (data) => '<!DOCTYPE html>\n<html><body>\n  <script id="embedde
   assert.match(html, /const LEGACY_STORAGE_KEY/, 'seule une migration ponctuelle peut relire l’ancienne clé');
 
   // 3. Sans fichier lié : rien n'est écrit sur le disque, l'interface le dit.
+  // (Ce contexte de test ne définit pas showOpenFilePicker, donc le message
+  // spécifique "Firefox / indisponible" s'applique plutôt que "inactif".)
   ctx.markersData = [{ id: 'z', lat: 45, lng: 4 }];
   await ctx.saveAndSyncAll();
-  assert.match(elements.syncStatusText.textContent, /inactif/);
-  assert.equal(elements.syncDot.className, 'sync-dot idle');
+  assert.match(elements.syncStatusText.textContent, /indisponible/);
+  assert.equal(elements.syncDot.className, 'sync-dot warn');
   assert.equal(elements.btnBindFile.classList.contains('active-sync'), false);
   assert.equal(elements.markerCountBadge.textContent, 1);
   assert.match(elements["embedded-markdown"].textContent, /"id":"z"/);
