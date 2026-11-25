@@ -4518,7 +4518,14 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
 
         const handle = fileHandle;
         if (!handle) {
-          if (fileHandleLinked) {
+          if (typeof window.showOpenFilePicker !== "function") {
+            // Firefox : pas d'écriture directe dans le fichier. On oriente
+            // l'utilisateur vers le téléchargement manuel de la page à jour.
+            setSyncStatus(
+              "Enregistrement dans index.html indisponible sur Firefox — cliquez sur « Enregistrer dans index.html » pour télécharger la page à jour",
+              "warn"
+            );
+          } else if (fileHandleLinked) {
             setSyncStatus(
               dataOrigin === "import"
                 ? "Données lues depuis un fichier importé — non enregistrées dans index.html. Reliez le fichier pour les y enregistrer."
@@ -4614,10 +4621,19 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
       // y compris avec un chemin UNC \\serveur\partage\index.html).
       async function bindLocalHtmlFile() {
         if (!("showOpenFilePicker" in window)) {
-          showToast(
-            "Ce navigateur ne permet pas d’ouvrir un fichier en écriture. Utilisez Chrome ou Edge pour activer l’enregistrement dans index.html.",
-            "error"
+          // Firefox ne supporte pas l'API File System Access : impossible
+          // d'écrire directement dans index.html. On propose le téléchargement
+          // de la page complète à jour à la place.
+          const confirmDownload = window.confirm(
+            "Ce navigateur (Firefox) ne permet pas d'écrire directement dans index.html : l'enregistrement sur disque n'est pas supporté ici.\n\n" +
+              "• OK : télécharger la page complète à jour (index.html) et l'enregistrer manuellement à la place de l'ancien fichier.\n" +
+              "• Annuler : ne rien faire."
           );
+          if (!confirmDownload) {
+            showToast("Aucune modification n'a été enregistrée.", "info");
+            return;
+          }
+          downloadHtmlFile();
           return;
         }
         try {
@@ -4869,6 +4885,40 @@ window.LYON_MAP_DATA = {"center":[45.7547,4.8422],"hydro":[[[[4.78845,45.70899],
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showToast("Sauvegarde externe <strong>marqueurs-guillotiere.md</strong> téléchargée.", "info");
+      }
+
+      // Sauvegarde complète de la page mise à jour : réservé à Firefox et aux
+      // navigateurs qui ne supportent pas l'API File System Access
+      // (showOpenFilePicker), qui ne peuvent pas écrire directement dans
+      // index.html. On génère donc le fichier HTML complet (carte, styles,
+      // scripts et données à jour) et on le propose au téléchargement pour que
+      // l'utilisateur puisse le sauvegarder manuellement à la place de
+      // l'original.
+      function downloadHtmlFile() {
+        const mdContent = generateMarkdownContent();
+        const baseHtml = window.__cartoOriginalHtml || document.documentElement.outerHTML;
+        const nextHtml = buildHtmlDocumentWithData(baseHtml, mdContent);
+        if (!containsEmbeddedDataBlock(nextHtml)) {
+          showToast(
+            "Impossible de reconstituer la page à télécharger : bloc de données absent.",
+            "error"
+          );
+          return false;
+        }
+        const blob = new Blob([nextHtml], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "index.html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(
+          "Page complète sauvegardée dans <strong>index.html</strong>. Remplacez l'ancien fichier par celui-ci pour conserver vos modifications.",
+          "success"
+        );
+        return true;
       }
 
       function getMarkerDisplayLatLng(markerObj) {

@@ -66,6 +66,15 @@ Le panneau latéral n’affiche plus que la liste des marqueurs (recherche, filt
 6. « Charger un fichier .md » accepte une sauvegarde `.md` **ou** un `index.html` : seul le bloc de données est repris.
 7. « Exporter le fichier .md » produit une **copie externe de secours** dans le dossier de téléchargements ; elle n’est jamais relue automatiquement.
 
+### 🦊 Firefox
+
+Firefox ne supporte pas l'API File System Access (`showOpenFilePicker`) : il n'est donc pas possible d'écrire les modifications **directement dans le fichier `index.html`** depuis ce navigateur.
+
+- Le reste de l'application (carte, liste, fiches, filtres, recherche, zone couverte) fonctionne normalement sous Firefox.
+- L'indicateur de synchronisation indique que l'enregistrement dans `index.html` est indisponible.
+- Pour sauvegarder vos modifications sous Firefox, cliquez sur « 🔗 Enregistrer dans index.html » : une page complète à jour vous est proposée au téléchargement (`index.html`). Enregistrez-la manuellement à la place de l'ancien fichier pour conserver vos données.
+- Pour l'écriture directe automatique dans le fichier, utilisez Chrome ou Edge.
+
 ### 🧪 Tests
 
 ```bash
